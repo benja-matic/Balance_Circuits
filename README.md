@@ -8,7 +8,7 @@ Wang-Buzsaki Neurons
 
 Connectivities:
 Random
-Structured Connections
+Structured
 
 Circuits:
 Local
