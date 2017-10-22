@@ -109,7 +109,7 @@ function rand_pair_cor(bin, lt, lr, Neurons, n)
   end
   a = convert(Array{Float64}, cor_store)
   #now return the mean of these correlations
-  return mean(a)
+  return a
 end
 
 function fano_train(Fcount, error_code)
@@ -143,7 +143,7 @@ function CV_ISI_ALLTIME(Neurons, t, r)
   mcv = emptiness(a, mean, -5)
   medcv = emptiness(a, median, -5)
   stdcv = emptiness(a, std, -5)
-  return mcv, medcv, stdcv
+  return a
 end
 
 function running_mean(signal, window, step)

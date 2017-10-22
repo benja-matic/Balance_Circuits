@@ -1,16 +1,13 @@
-###Local Circuit With Structured Connections
-###Respects Dale's Law
-
-function von_mises_dist(x, k, mu, N)
-  a = exp(k*cos(x-mu))/(N*besseli(0, k))
-end
+###Local Circuit With Random Connections
+###Does not respect Dale's law
 
 function random_weights(N, p, thresh)
     k = p*N #each cell sees on average k inputs
     ks = sqrt(k)
     W = zeros(N,N)
+
     for i = 1:N
-        W[i,:] = randn(N) * thresh / ks
+        W[i,:] = -1.5 + 2.5*randn(N) * thresh / ks
     end
 
     px = rand(N,N) .< p
@@ -33,7 +30,7 @@ function LIF_delta_solve_CSC(W, CSR, S, runtime, h)
 
     vth = 20
     ntotal = round(Int, runtime/h)
-    S = fill(S, N)
+    S = fill(S, N) .* h
     v = rand(N)*vth
     tau_m = 20.
     #dV/dt = S - v/tau_m; Euler: V = V + dV/dt * h; Euler: V += S - V/tau_m * h
@@ -57,8 +54,8 @@ function LIF_delta_solve_CSC(W, CSR, S, runtime, h)
                 js = spe[j]
                 v[CSR[js]] += W[CSR[js], js]
                 input[CSR[js], iter] += W[CSR[js], js]
-                push!(r, js)
                 push!(t, iter)
+                push!(r, js)
             end
         end
 
@@ -92,8 +89,8 @@ function LIF_delta_solve(W, S, runtime, h)
         if vsm > 0
             spe = find(ves)
             for j = 1:vsm
-                v[CSR[j]] += W[CSR[j], j]
-                input[CSR[j], iter] += W[CSR[j],j]
+                v += W[:, spe[j]]
+                input[:, iter] += W[:,spe[j]]
                 push!(r, spe[j])
                 push!(t, iter)
             end
@@ -104,13 +101,69 @@ function LIF_delta_solve(W, S, runtime, h)
 
     return t, r, input, volta
 end
-runtime = 100 #ms
-h = 0.1
+
+runtime = 10000 #ms
+fbinsize = 100 #ms
+cbinsize = 50 #ms
+h = 0.05
 N = 2000
 rt = runtime/1000. #convert to seconds
-p = 0.2
-S = 2.1
+p = 0.1
+S = 2.0
 vth = 20. #sticking with 20 but be sure same in W and LIF_delta_solve
-W = random_weights(N, p, vth)
-CSC = sparse_rep(W,N)
-t, r, input, volta = LIF_delta_solve_CSC(W, CSC, S, runtime, h)
+
+# W = random_weights(N, p, vth)
+# CSC = sparse_rep(W,N)
+# @time t, r, input, volta = LIF_delta_solve_CSC(W, CSC, S, runtime, h)
+
+include("analyze_results.jl")
+
+tic()
+Neurons = Neuron_finder(r, 10, 400)
+Rates = [length(find(r .== i))/rt for i=1:N]
+countF = count_train_intron(fbinsize, t, r, Neurons, length(Neurons), false)
+spike_correlations = rand_pair_cor(cbinsize, t, r, Neurons, 1000)
+FANO_mean, FANO_median, FANO_std = fano_train(countF, -5)
+CVS = CV_ISI_ALLTIME(Neurons, t, r)
+Input_M = [mean(input[i,:]) for i=1:N]
+Input_V = [var(input[i,:]) for i=1:N]
+
+println("FANO MEAN:",FANO_mean)
+println("CV MEAN:", mean(CVS))
+println("COR MEAN:", mean(spike_correlations))
+println("RATE MEAN: ", mean(Rates))
+println("INPUT MEAN: ", mean(Input_M))
+println("INPUT VAR: ", mean(Input_V))
+
+toc()
+
+figure(1)
+plot(t .* h, r, "g.", ms = 1.)
+title("Raster Plot")
+xlabel("Time (ms)")
+ylabel("Neuron #")
+
+figure(2)
+plt[:hist](Rates, 100)
+title("Histogram of Firing Rates")
+xlabel("Firing Rate (Hz)")
+
+figure(3)
+plt[:hist](CVS, 100)
+title("Histogram of CV(isi)")
+xlabel("CV(isi)")
+
+figure(4)
+plt[:hist](spike_correlations, 100)
+title("Histogram of Pairwise Spike Count Correlations")
+xlabel("Correlation")
+
+figure(5)
+plot(W[500,:][:])
+title("Sample Row of Weights Matrix")
+xlabel("Synaptic Strength Received by This Neuron (mV)")
+
+figure(6)
+plt[:hist](input[500,:][:], 100)
+title("Histogram of Synaptic Input to Sample Neuron")
+xlabel("Synaptic Input/dt (mV/$(h) ms)")

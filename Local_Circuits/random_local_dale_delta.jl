@@ -95,7 +95,7 @@ function LIF_delta_solve_CSC_dale(W, CSR, S, runtime, h)
     return te, re, ti, ri, input, volta
 end
 
-runtime = 2000 #ms
+runtime = 10000 #ms
 fbinsize = 100 #ms
 cbinsize = 50 #ms
 h = 0.05
@@ -107,19 +107,14 @@ p = 0.12
 S = 2.1
 vth = 20. #sticking with 20 but be sure same in W and LIF_delta_solve
 
-Jee = 80.
-Jie = 400.
-Jei = -200.
-Jii = -100.
+Jee = 100.
+Jie = 1000.
+Jei = -100.
+Jii = -300.
 
 W = random_weights_dale(Ne, Ni, p, vth, Jee, Jei, Jie, Jii)
 CSC = sparse_rep(W,N)
 @time te, re, ti, ri, input, volta = LIF_delta_solve_CSC_dale(W, CSC, S, runtime, h)
-
-figure(1)
-plot(te, re, "g.", ms = 1.)
-figure(2)
-plot(ti, ri, "b.", ms = 1.)
 
 include("analyze_results.jl")
 
@@ -129,19 +124,59 @@ if ((E_Neurons == -5) | (I_Neurons == -5))
   println("Too Little Spiking")
   return "garbage"
 else
+
+E_Rates = [length(find(re .== i))/rt for i=1:Ne]
+I_Rates = [length(find(ri .== i))/rt for i=1:Ni]
 E_rate = length(re)/Ne/rt
 I_rate = length(ri)/Ni/rt
 E_countF = count_train_intron(fbinsize, te, re, E_Neurons, length(E_Neurons), false)
 I_countF = count_train_intron(fbinsize, ti, ri, I_Neurons, length(I_Neurons), false)
-E_spike_correlation = rand_pair_cor(cbinsize, te, re, E_Neurons, 1000)
-I_spike_correlation = rand_pair_cor(cbinsize, ti, ri, I_Neurons, 250)
+E_spike_correlations = rand_pair_cor(cbinsize, te, re, E_Neurons, 1000)
+I_spike_correlations = rand_pair_cor(cbinsize, ti, ri, I_Neurons, 250)
 E_FANO_mean, E_FANO_median, E_FANO_std = fano_train(E_countF, -5)
 I_FANO_mean, I_FANO_median, I_FANO_std = fano_train(I_countF, -5)
-E_CV_mean, E_CV_median, E_CV_STD = CV_ISI_ALLTIME(E_Neurons, te, re)
-I_CV_mean, I_CV_median, I_CV_STD = CV_ISI_ALLTIME(I_Neurons, te, re)
+ECVS = CV_ISI_ALLTIME(E_Neurons, te, re)
+ICVS = CV_ISI_ALLTIME(I_Neurons, ti, ri)
 
 println("FANO E:",E_FANO_mean, ", FANO I: ", I_FANO_mean)
-println("CV E:", E_CV_mean, ", CV I: ", I_CV_mean)
-println("COR E:", E_spike_correlation, ", COR I: ", I_spike_correlation)
+println("CV E:", mean(ECVS), ", CV I: ", mean(ICVS))
+println("COR E:", mean(E_spike_correlations), ", COR I: ", mean(I_spike_correlations))
 println("rate e: ", E_rate, ", rate i: ", I_rate)
 end
+
+figure(1)
+plot(te .* h, re, "g.", ms = 1.)
+title("Excitatory Raster")
+xlabel("Time (ms)")
+ylabel("Neuron #")
+
+figure(2)
+plot(ti, ri, "b.", ms = 1.)
+title("Inhibitory Raster")
+xlabel("Time (ms)")
+ylabel("Neuron #")
+
+figure(3)
+plt[:hist](E_Rates, 100)
+title("Histogram of Excitatory Firing Rates")
+xlabel("Firing Rate (Log(Hz))")
+
+figure(4)
+plt[:hist](ECVS, 100)
+title("Histogram of CV(isi) in Excitatory Cells")
+xlabel("CV(isi)")
+
+figure(5)
+plt[:hist](E_spike_correlations, 100)
+title("Histogram of Pairwise Spike Count Correlations")
+xlabel("Correlation")
+
+figure(6)
+plot(W[500,:][:])
+title("Sample Row of Weights Matrix")
+xlabel("Synaptic Strength Received by This Neuron (mV)")
+
+figure(7)
+plt[:hist](input[500,:][:], 100)
+title("Histogram of Synaptic Input to Sample Neuron")
+xlabel("Synaptic Input/dt (mV/$(h) ms)")
