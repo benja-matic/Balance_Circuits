@@ -1,9 +1,6 @@
 function von_mises_dist(x, k, mu, N)
   a = exp(k*cos(x-mu))/(N*besseli(0, k))
 end
-
-#
-
 function weights(Ne,Ni,kee,kei,kie_L,kii,Aee,Aei,Aie_L,Aii,pee,pei,pie,pii)
 # Construct weight functions
 
@@ -17,7 +14,7 @@ wi = 2*collect(0:Ni-1)*pi/Ni
 
 for i = 1:Ne
     wee[i,:]=Aee*circshift(von_mises_dist(we, kee, 0, Ne), i-1)
-    wei[i,:]=Aei*circshift(von_mises_dist(wi, kei, 0, Ni),div(Ni*i,Ne)-1) #
+    wei[i,:]=Aei*circshift(von_mises_dist(wi, kei, 0, Ni),div(Ni*i,Ne)-1)
 end
 for i = 1:Ni
     wie[i,:]=Aie_L*circshift(von_mises_dist(we, kie_L, 0, Ne),div(Ne*i,Ni)-1)# + Aie_D*circshift(von_mises_dist(we, kie_D, pi, Ne),div(Ne*i,Ni)-1)
@@ -34,119 +31,89 @@ wii = wii.*(rand(Ni,Ni).<pii)
 return wee, -wei, wie, -wii
 end
 
-function euler_lif_NA(h, total, Ne, Ni, wee, wei, wie, wii, s1, s2, vth, tau_m, tau_ee, tau_ei, tau_ie, tau_ii)
+function lif(h,total,Ne,Ni,wee,wei,wie,wii,Se1,Se2)
+# Leaky integrate-and-fire network
 
-  ntotal = round(Int,total/h)
-  srand(1234)
+vth = 20
+ntotal = round(Int,total/h)
 
-  #initial conditions
-  ve = rand(Ne)*vth
-  vi = rand(Ni)*vth
-  ve_buff = ve
-  vi_buff = vi
-  e_top = zeros(ntotal)
-  e_bot = zeros(ntotal)
-  i_guy = zeros(ntotal)
-  # ev = zeros(ntotal)
+ve = rand(Ne)*vth
+vi = rand(Ni)*vth
 
-  #storage space
-  see = zeros(Ne)#synapse
-  sei = zeros(Ne)
-  sie = zeros(Ni)
-  sii = zeros(Ni)
-  #raster
-  time_e = Float64[0]
-  raster_e = Float64[0]
-  time_i = Float64[0]
-  raster_i =Float64[0]
-  #Calculate drive and leak constants ahead of time
-  m_leak = h/tau_m
-  ee_leak = h/tau_ee
-  ei_leak = h/tau_ei
-  ie_leak = h/tau_ie
-  ii_leak = h/tau_ii
-  #Set up drive to two pools special for competitive network
-  drive = zeros(Ne)
-  FPe = div(Ne,5) #each pool is 2/5 of the network
-  P1s = round(Int,Ne/4-FPe)
-  P1e = round(Int,Ne/4+FPe)
-  P2s = round(Int,3*Ne/4-FPe)
-  P2e = round(Int,3*Ne/4+FPe)
-  drive[P1s:P1e] = s1*h
-  drive[P2s:P2e] = s2*h
-  half = div(Ne, 2)
-  quarter = div(half, 2)
-  rt = half + quarter
-  rb = quarter
-  ig = div(Ni, 2)
+se = zeros(Int,Ne)
+si = zeros(Int,Ni)
 
-  kill_flag = false
-  for iter = 1:ntotal
-    #administer drive, leak, synapse, and adaptation to voltage
-    ve += drive + (h*see) + (h*sei) - (ve*m_leak) #- (ae*g_e)
-    vi += (h*sie) + (h*sii) -(vi*m_leak) #- (ai*g_i)
-    #ev[iter] = ve[rt]
-    e_top[iter] = (h*see[rt]) + (h*sei[rt])
-    e_bot[iter] = (h*see[rb]) + (h*sei[rb])
-    #e_top[iter] = drive[rt] + (h*see[rt]) + (h*sei[rt]) #- (ve[rt]*m_leak) #- (ae[rt]*g_e)
-    #e_bot[iter] = drive[rb] + (h*see[rb]) + (h*sei[rb]) #- (ve[rb]*m_leak) #- (ae[rb]*g_e)
-    i_guy[iter] = (h*sie[ig]) + (h*sii[ig]) #-(vi[ig]*m_leak)
-    #administer leak to synapse
-    see -= (see*ee_leak)
-    sei -= (sei*ei_leak)
-    sie -= (sie*ie_leak)
-    sii -= (sii*ii_leak)
-    #check for spikes
-    ves = (ve.>vth)
-    vis = (vi.>vth)
-    vesum = sum(ves)
-    visum = sum(vis)
-    #update excitatory synapses and adaptation
-    if vesum > 0
-      spe = find(ves)
-      for j = 1:vesum
-        #interpolate spike time
-        delta_h = interpolate_spike(ve[spe[j]], ve_buff[spe[j]], vth) #time since the spike (units of h)
-        lee = exp(delta_h/tau_ee)
-        lie = exp(delta_h/tau_ie)
-        see += wee[:, spe[j]]*lee #modify amplitude of synapse by decay since estimated time of spike
-        sie += wie[:, spe[j]]*lie
-        push!(raster_e,spe[j])
-  	    push!(time_e,iter-delta_h)
+FPe = div(Ne,5)
+Se = zeros(Ne)
+
+P1s = round(Int,Ne/4-FPe)
+P1e = round(Int,Ne/4+FPe)
+
+P2s = round(Int,3*Ne/4-FPe)
+P2e = round(Int,3*Ne/4+FPe)
+
+Se[P1s:P1e] = Se1
+Se[P2s:P2e] = Se2
+half = div(Ne, 2)
+
+tau = 20
+time_e = Float64[0]
+raster_e = Float64[0]
+time_i = Float64[0]
+raster_i =Float64[0]
+
+leak = exp(-h/tau)
+kill_flag = false
+for  iter = 1:ntotal
+# time loop
+
+     # administer leak
+     ve *= leak
+     vi *= leak
+
+     ve += tau*Se*(1.-leak)
+     # reset and record spike times
+     se = (ve.>vth)
+     si = (vi.>vth)
+
+     ve -= vth*se
+     vi -= vth*si
+
+     nspikese = sum(se)
+     nspikesi = sum(si)
+
+     if nspikese > 0
+     	spe = find(se)
+     	for j = 1:nspikese
+	    # Give synaptic kicks
+  	    ve += wee[:,spe[j]]
+       	vi += wie[:,spe[j]]
+  	    push!(raster_e,spe[j])
+  	    push!(time_e,iter)
       end
-    end
-    #update inhibitory synapses and adaptation
-    if visum > 0
-      spi = find(vis)
-      for j = 1:visum
-        #interpolate spike time
-        delta_h = interpolate_spike(vi[spi[j]], vi_buff[spi[j]], vth)
-        lei = exp(delta_h/tau_ei)
-        lii = exp(delta_h/tau_ii)
-        sei += wei[:,spi[j]]*lei #modify amplitude of synapse by decay since estimated time of spike
-        sii += wii[:,spi[j]]*lii
-        push!(raster_i,spi[j])
-  	    push!(time_i,iter-delta_h)
+     end
+     if nspikesi > 0
+     	spi = find(si)
+     	for j = 1:nspikesi
+	    # Give synaptic kicks
+  	    ve += wei[:,spi[j]]
+       	vi += wii[:,spi[j]]
+  	    push!(raster_i,spi[j])
+  	    push!(time_i,iter)
       end
-    end
-    #reset after spike
-    ve -= vth*ves
-    vi -= vth*vis
-    #
-    ve_buff = ve
-    vi_buff = vi
-    if iter == 1000
-      if (length(raster_e)/Ne > 200*h*iter*(1/1000)) | (length(raster_i)/Ni > 200*h*iter*(1/1000))
-        kill_flag = true
-        break
-      end
-    end
-  end
+     end
+     if iter == 1000
+       if (length(raster_e) > 200*Ne*h*iter*.5*(1/1000)) | (length(raster_i) > 200*Ne*h*iter*.5*(1/1000))
+         kill_flag = true
+         break
+       end
+     end
 
+end # of time loop
 
-
-  return time_e, raster_e, time_i, raster_i, kill_flag, e_top, e_bot, i_guy
+return time_e,raster_e,time_i,raster_i, kill_flag
 end
+
 
 function write_result(wta, etm, etv, ebm, ebv, cor_within, cor_between, ntf, mif, mcv, lte, id)
   println("##RESULT $(wta), $(etm), $(etv), $(ebm), $(ebv), $(cor_within), $(cor_between), $(ntf), $(mif), $(mcv), $(lte), $(id)")
@@ -386,25 +353,4 @@ function rand_pair_cor(bin, lt, lr, Neurons, n)
   #now return the mean of these correlations
   return mean(a)
 end
-end
-
-function moments(x)
-  n = length(x)
-  m = mean(x)
-  skew = zeros(n)
-  kurt = zeros(n)
-  vary = zeros(n)
-  for i =1:n
-    d = x[i] - m
-    skew[i] = d^3
-    kurt[i] = d^4
-    vary[i] = d^2
-  end
-  ms = mean(skew)
-  mk = mean(kurt)
-  mv = mean(vary)
-  skewt = ms/(mv^1.5)
-  KURT = mk/(mv^2)
-  t = (m-1.)/sqrt(mv)
-  return m, mv, t, skewt, KURT
 end

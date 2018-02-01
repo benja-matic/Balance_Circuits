@@ -20,6 +20,7 @@ Aii= 689#parse(Float64, ARGS[8])
 s_strength = 3.08#parse(Float64, ARGS[9])
 p = .34#parse(Float64, ARGS[10])
 Ne = 3200#parse(Int64, ARGS[11])
+# Ne = 1600
 Ni = div(Ne, 4)
 h = .1
 vth = 20
@@ -28,7 +29,25 @@ tau_ee = 2
 tau_ei = 2
 tau_ie = 2
 tau_ii = 2
-
+pee = p
+pei = p
+pie = p
+pii = p
+#
+# kee = 2.763
+# kei = .354
+# kie = .636
+# kii = .268
+#
+# Aee = 37
+# Aei = 130
+# Aie = 100
+# Aii = 100
+# pee = .04
+# pei = .4
+# pie = .04
+# pii = 0.4
+# s_strength = 1.5
 
 kee = sd_2_k(kee)
 kei = sd_2_k(kei)
@@ -58,17 +77,17 @@ rt = ((ntotal - end_trans)/1000.)*h
 half_e = div(Ne, 2)
 half_i = div(Ni, 2)
 
-Aee /= p
-Aei /= p
-Aie /= p
-Aii /= p
+Aee /= pee
+Aei /= pei
+Aie /= pie
+Aii /= pii
 #tic()
 c=0
 
 
-wee,wei,wie,wii = weights(Ne,Ni,kee, kei, kie, kii, Aee, Aei, Aie, Aii, p,p,p,p);
+wee,wei,wie,wii = weights(Ne,Ni,kee, kei, kie, kii, Aee, Aei, Aie, Aii, pee,pei,pie,pii);
 # for gamma = .0001:0.005:.05
-te,re,ti,ri,kill_flag, e_top, e_bot, i_guy = euler_lif(h,runtime,Ne,Ni,wee,wei,wie,wii,s1,s2, vth, tau_m, tau_ee, tau_ei, tau_ie, tau_ii);
+te,re,ti,ri,kill_flag, e_top, e_bot, i_guy = euler_lif_NA(h,runtime,Ne,Ni,wee,wei,wie,wii,s1,s2, vth, tau_m, tau_ee, tau_ei, tau_ie, tau_ii);
 
 ###Kill transient
 e_top_pt = e_top[end_trans:end]
@@ -91,15 +110,17 @@ if ((top_e_neurons == -5) & (bot_e_neurons == -5))
 else
 I_Neurons = Neuron_finder(ri_pt, 10, min_i_neurons)
 #rates
+E_Rates = [length(find(re .== i))/rt for i=1:Ne]
+I_Rates = [length(find(ri .== i))/rt for i=1:Ni]
 E_rate = (length(re_pt)/rt)/Ne
-I_rate = (length(ri_pt)rt)/Ni
+I_rate = (length(ri_pt)/rt)/Ni
 
 #counts
 E_count_top = count_train(fbinsize, te_pt, re_pt, top_e_neurons, length(top_e_neurons))
 E_count_bot = count_train(fbinsize, te_pt, re_pt, bot_e_neurons, length(bot_e_neurons))
 I_count_all = count_train(fbinsize, ti_pt, ri_pt, I_Neurons, length(I_Neurons))
 #FF
-ntf = network_fano(te_pt, re_pt, cbinsize)
+ntfa = network_fano(te_pt, re_pt, cbinsize, ntotal)
 E_FANO_mean_top, E_FANO_median_top, E_FANO_std_top = fano_train(E_count_top, -5)
 E_FANO_mean_bot, E_FANO_median_bot, E_FANO_std_bot = fano_train(E_count_bot, -5)
 I_FANO_mean, I_FANO_median, I_FANO_std = fano_train(I_count_all, -5)
@@ -118,4 +139,16 @@ igm, igstd, igbal, igskew, igkurt = moments(i_guy_pt)
 #normality analysis
 
 println("##RESULT $(E_rate), $(I_rate), $(wta_ness), $(bias), $(ntf), $(E_FANO_mean_top), $(E_FANO_mean_bot), $(I_FANO_mean), $(E_CV_mean_top), $(E_CV_mean_bot), $(I_CV_mean), $(E_spike_correlation_top), $(E_spike_correlation_bot), $(I_spike_correlation), $(etm), $(etstd), $(etbal), $(etskew), $(etkurt), $(ebm), $(ebstd), $(ebbal), $(ebskew), $(ebkurt), $(igm), $(igstd), $(igbal), $(igskew), $(igkurt), $(kee), $(kei), $(kie), $(kii), $(Aee*p), $(Aei*p), $(Aie*p), $(Aii*p), $(s_strength), $(p), $(Ne)")
+end
+
+
+
+
+function write_raster(t, filename)
+  newfile = open(filename, "w")
+  for i in eachindex(t)
+    text = "$(t[i]),"
+    write(newfile, text)
+  end
+  close(newfile)
 end

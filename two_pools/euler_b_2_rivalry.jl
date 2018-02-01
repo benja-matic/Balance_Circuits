@@ -51,9 +51,12 @@ function euler_lif(h, total, Ne, Ni, wee, wei, wie, wii, s1, s2, vth, tau_m, tau
   vi = rand(Ni)*vth
   ve_buff = ve
   vi_buff = vi
+  #input = zeros(Ne, ntotal)
   e_top = zeros(ntotal)
   e_bot = zeros(ntotal)
   # ev = zeros(ntotal)
+  adapt_top = zeros(ntotal)
+  adapt_bot = zeros(ntotal)
 
   #storage space
   see = zeros(Ne)#synapse
@@ -78,8 +81,8 @@ function euler_lif(h, total, Ne, Ni, wee, wei, wie, wii, s1, s2, vth, tau_m, tau
   #Set up drive to two pools special for competitive network
   drive = zeros(Ne)
   FPe = div(Ne,5) #each pool is 2/5 of the network
-  P1s = round(Int,Ne/4-FPe)
-  P1e = round(Int,Ne/4+FPe)
+  P1s = round(Int,1+Ne/4-FPe)
+  P1e = round(Int,1+Ne/4+FPe)
   P2s = round(Int,3*Ne/4-FPe)
   P2e = round(Int,3*Ne/4+FPe)
   drive[P1s:P1e] = s1*h
@@ -95,8 +98,13 @@ function euler_lif(h, total, Ne, Ni, wee, wei, wie, wii, s1, s2, vth, tau_m, tau
     ve += drive + (h*see) + (h*sei) - (ve*m_leak) - (ae*g_e)
     vi += (h*sie) + (h*sii) -(vi*m_leak) - (ai*g_i)
     #ev[iter] = ve[rt]
-    e_top[iter] = drive[rt] + (h*see[rt]) + (h*sei[rt]) - (ve[rt]*m_leak) - (ae[rt]*g_e)
-    e_bot[iter] = drive[rb] + (h*see[rb]) + (h*sei[rb]) - (ve[rb]*m_leak) - (ae[rb]*g_e)
+    #input[:,iter] = drive + (h*see[:]) + (h*sei[:]) - (ae[:]*g_e)
+    #e_top[iter] = drive[rt] + (h*see[rt]) + (h*sei[rt]) - (ve[rt]*m_leak) - (ae[rt]*g_e)
+    #e_bot[iter] = drive[rb] + (h*see[rb]) + (h*sei[rb]) - (ve[rb]*m_leak) - (ae[rb]*g_e)
+    e_top[iter] = drive[rt] + (h*see[rt]) + (h*sei[rt]) - (ae[rt]*g_e)
+    e_bot[iter] = drive[rb] + (h*see[rb]) + (h*sei[rb]) - (ae[rb]*g_e)
+    adapt_top[iter] = sum(ae[P2s:P2e])
+    adapt_bot[iter] = sum(ae[P1s:P1e])
     #administer leak to synapse
     see -= (see*ee_leak)
     sei -= (sei*ei_leak)
@@ -156,7 +164,7 @@ function euler_lif(h, total, Ne, Ni, wee, wei, wie, wii, s1, s2, vth, tau_m, tau
 
 
 
-  return time_e, raster_e, time_i, raster_i, kill_flag, e_top, e_bot
+  return time_e, raster_e, time_i, raster_i, kill_flag, e_top, e_bot, adapt_top, adapt_bot
 end
 
 function cv(isi)
@@ -362,12 +370,12 @@ function comparison(flag, x)
   end
 end
 
-function comp_01(x)
-  if x > .7
+function comp_01(x, th, tl)
+  if x > th
     return "win"
-  elseif .3 <= x <= .7
+  elseif tl <= x <= th
     return "draw"
-  elseif x < .3
+  elseif x < tl
     return "lose"
   else
     return "weird"
@@ -437,7 +445,7 @@ function WLD_01(s)
 
   s2 = s[2:end]
   for i in eachindex(s2)
-    f1 = comp_01(s2[i])
+    f1 = comp_01(s2[i], .7, .3)
     if f1 != flag
       flag = f1
       push!(times, i+1)
@@ -448,6 +456,72 @@ function WLD_01(s)
   push!(flags, "end")
   return flags, times
 end
+
+function WLD_A(s, th, tl)
+  if maximum(s) < tl
+    return ["lose", "end"], [1, length(s)]
+  elseif minimum(s) >= th
+    return ["win", "end"], [1, length(s)]
+  elseif (tl <= maximum(s) <= th) & (tl <= minimum(s) <= th)
+    return ["draw", "end"], [1, length(s)]
+  end
+  times = []
+  flags = []
+  if s[1] >=th
+    flag = "win"
+  elseif tl <= s[1] <= th
+    flag = "draw"
+  elseif s[1] < tl
+    flag = "lose"
+  end
+
+  push!(times, 1)
+  push!(flags, flag)
+
+  s2 = s[2:end]
+  for i in eachindex(s2)
+    f1 = comp_01(s2[i], th, tl)
+    if f1 != flag
+      flag = f1
+      push!(times, i+1)
+      push!(flags, flag)
+    end
+  end
+  push!(times, length(s))
+  push!(flags, "end")
+  return flags, times
+end
+
+function adapt_switch(adapt_top, adapt_bot, th, tl)
+  aa = adapt_bot .+ adapt_top
+  at = adapt_top ./ aa
+  at = at[2:end]
+  flags, times = WLD_A(at, th, tl)
+  return flags, times
+end
+
+function dom_time(flags, times)
+  mixed = []
+  win = []
+  lose = []
+  for i=1:length(times)-1
+    if flags[i] == "draw"
+      if (flags[i+1] == "win") | (flags[i+1] == "lose")
+        push!(mixed, times[i+1] - times[i])
+      end
+    elseif flags[i] == "win"
+      push!(win, times[i+1] - times[i])
+    elseif flags[i] == "lose"
+      push!(lose, times[i+1] - times[i])
+    end
+  end
+  mixed = convert(Array{Float64}, mixed)
+  win = convert(Array{Float64}, win)
+  lose = convert(Array{Float64}, lose)
+  return mixed, win, lose
+end
+
+
 
 function splice_reversions(flags, times)
   w0 = findfirst(flags, "win")
@@ -475,6 +549,54 @@ function splice_reversions(flags, times)
 end
 
 
+# function low_pass_DD(times, mint)
+#   #mint is the threshold for reversions; if shorter than mint, we will assume dominance throughout
+#   xtime = []
+#   i = 1
+#   while i < (length(times) -1)
+#     c = i
+#     while (((times[c+1][1] - times[c][2]) < mint) & (c <= length(times) -1))
+#       println(times[c+1][1] - times[c][2], " and ", (times[c+1][1] - times[c][2]) < mint, " and ", c, " and ", i)
+#       c +=1
+#     end
+#     println("just exited while loop")
+#     push!(xtime, [times[i][1], times[c][2]])
+#     i += c
+#   end
+#   return xtime
+# end
+
+  # xtime = [times[i+1][1] - times[i][2] for i = 1:length(times)-1] #times between dominances
+  # revs = [] #index where there's < mint time between your end and next start
+  # for i in eachindex(xtime)
+  #   if xtime[i] < mint
+  #     push!(revs, i)
+  #   end
+  # end
+  # dx = diff(revs)
+  # x2 = []
+  # for i in eachindex(dx)
+  #   if dx[i] == 1
+  #     push!(x2, i)
+  #   end
+  # end
+  #
+  # ftime = []
+  # dtime = []
+  # for i = 1:length(times) - 1
+  #   if i in revs
+  #     push!(ftime, (times[i][1], times[i+1][2]))
+  #     push!(dtime, i+1)
+  #   elseif
+  #
+  #
+  #
+  # for i = 1:length(times)-1
+  #   if (times[i+1][1] - times[i][2]) < mint
+  #     push!(xtime, (times[i][1], times[i+1][2])
+  #   end
+  # end
+
 
 
 function fatigue_switches(aet, aeb, tauadapt, h)
@@ -497,6 +619,57 @@ function fatigue_switches(aet, aeb, tauadapt, h)
   m = mean(aet_pt[a])
   return a, m
 end
+
+# function low_pass_DD(flags, times, mint)
+#   xf = []
+#   xt = []
+#   l = find(flags.=="lose")
+#   w = find(flags.=="win")
+#   d = find(flags.=="draw")
+#   lm = minimum(l)
+#   ld = minimum(w)
+#   m = minimum([lm, ld])
+#   fx = flags[m:end]
+#   tx = times[m:end]
+#   d = diff(tx)
+#   dx = find(d .>= mint)
+#   return fx[dx], tx[dx]
+# end
+
+function low_pass_DD(flags, times, mint)
+  wflag = true
+  tn, fn, wflag = diff_eater(times, flags, mint)
+  while wflag == true
+    tn, fn, wflag = diff_eater(tn, fn, mint)
+  end
+  return tn, fn
+end
+
+
+function diff_eater(t,f, mint)
+  tc = copy(t)
+  fc = copy(f)
+  f1 = f[1]
+  c1 = t[1]
+  wflag = false
+  for i=1:length(t)-1
+    td = (tc[i+1] - tc[i])
+    if td < mint
+
+      wflag = true
+      deleteat!(tc, i+1)
+      deleteat!(fc, i+1)
+      if i != 1
+        deleteat!(tc, i)
+        deleteat!(fc, i)
+      end
+      break
+    end
+  end
+  return tc, fc, wflag
+end
+
+
 
 function splice_flags(flags, times)
   l = find(flags.=="lose")
@@ -746,24 +919,29 @@ end
 
 function rand_pair_cor(bin, lt, lr, Neurons, n)
   bins = collect(lt[1]:bin:lt[end])
-  count1 = zeros(n, length(bins)-1)
-  ya = []
-  neurons = shuffle(Neurons)
+  ya = [] #if you already looked at this neuron
+  neurons = shuffle(Neurons) #
   lank = length(Neurons)
-  shank = zeros(lank, length(bins)-1)
+  shank = zeros(lank, length(bins)-1) #store count trains as you go
   cor_store = []
-  #loop through however many sample correlations you want
+  #loop through n random pairwise correlations
   for i = 1:n
     #pick two random neurons in this pool
     x1 = rand(1:lank)
     x2 = rand(1:lank)
+    if x1 == x2
+      while x1 == x2
+        x2 = rand(1:lank)
+      end
+    end
     #conditional statements just ensure that you don't waste time re-calculating count trains that you already have
-    if ((x1 in ya) & (x2 in ya))
-      c = cor(vec(shank[x1,:]), vec(shank[x2,:]))
+    if ((x1 in ya) & (x2 in ya)) #already calculated count trains for both neurons
+      c = cor(vec(shank[x1,:]), vec(shank[x2,:])) #go ahead and correlate them
       if isnan(c) == false
         push!(cor_store, c)
       end
-    elseif  ((x1 in ya) & ((x2 in ya) == false))
+    elseif  ((x1 in ya) & ((x2 in ya) == false)) #if you already did one but not the other
+      #update shank for the new neuron
       INT2 = lt[find(lr.==neurons[x2])]
       for j = 1:length(bins)-1
         shank[x2,j] = length(find(bins[j] .<= INT2 .< bins[j+1]))
@@ -773,7 +951,8 @@ function rand_pair_cor(bin, lt, lr, Neurons, n)
       if isnan(c) == false
         push!(cor_store, c)
       end
-    elseif ((x2 in ya) & ((x1 in ya) == false))
+    elseif ((x2 in ya) & ((x1 in ya) == false)) #if you already did the other but not the one
+      #update shank for the one neuron
       INT2 = lt[find(lr.==neurons[x1])]
       for j = 1:length(bins)-1
         shank[x1,j] = length(find(bins[j] .<= INT2 .< bins[j+1]))
@@ -783,11 +962,11 @@ function rand_pair_cor(bin, lt, lr, Neurons, n)
       if isnan(c) == false
         push!(cor_store, c)
       end
-    else
+    else #you don't have either
       #get count trains
       INT1 = lt[find(lr.==neurons[x1])]
       INT2 = lt[find(lr.==neurons[x2])]
-      #add them to the counts matrix so you don't have to recalculate
+      #add them to shank so you don't have to recalculate
       for j = 1:length(bins)-1
         shank[x1,j] = length(find(bins[j] .<= INT1 .< bins[j+1]))
         shank[x2,j] = length(find(bins[j] .<= INT2 .< bins[j+1]))
@@ -799,7 +978,7 @@ function rand_pair_cor(bin, lt, lr, Neurons, n)
   end
   a = convert(Array{Float64}, cor_store)
   #now return the mean of these correlations
-  return mean(a)
+  return a
 end
 
 
@@ -1010,6 +1189,29 @@ function CV_ISI(introns, Neurons, t, r)
   return mcv, medcv, stdcv
 end
 
+function CV_ISI_D(introns, Neurons, t, r)
+  CVS = []
+  for i in eachindex(Neurons)
+    cvs = []
+    INT = t[find(r.==Neurons[i])] #times when neuron i spiked
+    for j in eachindex(introns)
+      isi = diff(INT[find(introns[j][1] .<= INT .<= introns[j][2])])
+      if length(isi) > 0
+        for d in isi
+          push!(cvs, d)
+        end
+      end
+    end
+    cvc = convert(Array{Float64}, cvs)
+    cov = emptiness(cvc, cv, -5)
+    if (isnan(cov) == false) & (cov != -5)
+      push!(CVS, cov)
+    end
+  end
+  a = convert(Array{Float64}, CVS)
+  return a
+end
+
 function CV_ISI_ALLTIME(Neurons, t, r)
   CVS = []
   for i in eachindex(Neurons)
@@ -1021,6 +1223,8 @@ function CV_ISI_ALLTIME(Neurons, t, r)
     end
   end
   mcv = emptiness(CVS, mean, -5)
+  x = convert(Array{Float64}, CVS)
+  return CVS
 end
 
 function correlate_within(counts, error_code)
