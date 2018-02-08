@@ -327,28 +327,30 @@ end
 end
 
 function rand_pair_cor(bin, lt, lr, Neurons, n)
-  if Neurons == -5
-    return -5
-  else
   bins = collect(lt[1]:bin:lt[end])
-  count1 = zeros(n, length(bins)-1)
-  ya = []
-  neurons = shuffle(Neurons)
+  ya = [] #if you already looked at this neuron
+  neurons = shuffle(Neurons) #
   lank = length(Neurons)
-  shank = zeros(lank, length(bins)-1)
+  shank = zeros(lank, length(bins)-1) #store count trains as you go
   cor_store = []
-  #loop through however many sample correlations you want
+  #loop through n random pairwise correlations
   for i = 1:n
     #pick two random neurons in this pool
     x1 = rand(1:lank)
     x2 = rand(1:lank)
+    if x1 == x2
+      while x1 == x2
+        x2 = rand(1:lank)
+      end
+    end
     #conditional statements just ensure that you don't waste time re-calculating count trains that you already have
-    if ((x1 in ya) & (x2 in ya))
-      c = cor(vec(shank[x1,:]), vec(shank[x2,:]))
+    if ((x1 in ya) & (x2 in ya)) #already calculated count trains for both neurons
+      c = cor(vec(shank[x1,:]), vec(shank[x2,:])) #go ahead and correlate them
       if isnan(c) == false
         push!(cor_store, c)
       end
-    elseif  ((x1 in ya) & ((x2 in ya) == false))
+    elseif  ((x1 in ya) & ((x2 in ya) == false)) #if you already did one but not the other
+      #update shank for the new neuron
       INT2 = lt[find(lr.==neurons[x2])]
       for j = 1:length(bins)-1
         shank[x2,j] = length(find(bins[j] .<= INT2 .< bins[j+1]))
@@ -358,7 +360,8 @@ function rand_pair_cor(bin, lt, lr, Neurons, n)
       if isnan(c) == false
         push!(cor_store, c)
       end
-    elseif ((x2 in ya) & ((x1 in ya) == false))
+    elseif ((x2 in ya) & ((x1 in ya) == false)) #if you already did the other but not the one
+      #update shank for the one neuron
       INT2 = lt[find(lr.==neurons[x1])]
       for j = 1:length(bins)-1
         shank[x1,j] = length(find(bins[j] .<= INT2 .< bins[j+1]))
@@ -368,11 +371,11 @@ function rand_pair_cor(bin, lt, lr, Neurons, n)
       if isnan(c) == false
         push!(cor_store, c)
       end
-    else
+    else #you don't have either
       #get count trains
       INT1 = lt[find(lr.==neurons[x1])]
       INT2 = lt[find(lr.==neurons[x2])]
-      #add them to the counts matrix so you don't have to recalculate
+      #add them to shank so you don't have to recalculate
       for j = 1:length(bins)-1
         shank[x1,j] = length(find(bins[j] .<= INT1 .< bins[j+1]))
         shank[x2,j] = length(find(bins[j] .<= INT2 .< bins[j+1]))
@@ -384,8 +387,7 @@ function rand_pair_cor(bin, lt, lr, Neurons, n)
   end
   a = convert(Array{Float64}, cor_store)
   #now return the mean of these correlations
-  return mean(a)
-end
+  return a
 end
 
 function moments(x)
