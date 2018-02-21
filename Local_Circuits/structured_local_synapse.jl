@@ -55,7 +55,7 @@ function euler_lif(h, total, Ne, Ni, wee, wei, wie, wii, sE, sI, vth, tau_m, tau
   ishuff = shuffle!(collect(1:Ni))
   eshuff = shuffle!(collect(1:Ne))
 
-  e_input = zeros(Ne, ntotal)
+  #e_input = zeros(Ne, ntotal)
   e_half = div(Ne, 2)
   i_half = div(Ni, 2)
 
@@ -80,15 +80,15 @@ function euler_lif(h, total, Ne, Ni, wee, wei, wie, wii, sE, sI, vth, tau_m, tau
   ae_leak = h/tau_ae
   ai_leak = h/tau_ai
   #Set up drive to two pools special for competitive network
-  drive = fill(sE, Ne)
-  drive_i = fill(sI, Ni)
+  drive = fill(sE, Ne)*h
+  drive_i = fill(sI, Ni)*h
 
   kill_flag = false
   for iter = 1:ntotal
     #administer drive, leak, synapse, and adaptation to voltage
     ve += drive + (h*see) + (h*sei) - (ve*m_leak) - (ae*g_e)
     vi += drive_i + (h*sie) + (h*sii) -(vi*m_leak) - (ai*g_i)
-    e_input[:,iter] = drive + (h*see) + (h*sei) - (ve*m_leak)#
+    #e_input[:,iter] = drive + (h*see) + (h*sei) - (ve*m_leak)#
 
     #administer leak to synapse
     see -= (see*ee_leak)
@@ -151,7 +151,7 @@ function euler_lif(h, total, Ne, Ni, wee, wei, wie, wii, sE, sI, vth, tau_m, tau
 
 
 
-  return time_e, raster_e, time_i, raster_i, kill_flag, e_input
+  return time_e, raster_e, time_i, raster_i, kill_flag
 end
 
 function cv(isi)
@@ -1028,10 +1028,7 @@ function CV_ISI_ALLTIME(Neurons, t, r)
     end
   end
   CVS = convert(Array{Float64}, CVS)
-  mean_cv = emptiness(CVS, mean, -5)
-  median_cv = emptiness(CVS, median, -5)
-  std_cv = emptiness(CVS, std, -5)
-  return mean_cv, median_cv, std_cv
+  return CVS
 end
 
 function correlate_within(counts, error_code)
