@@ -22,11 +22,6 @@ function homogenous_weights(N, p, Aee, Aei, Aie, Aie_NL, Aii, width)
   Ni = Int64(round(N/5))
   Ne = N - Ni
 
-  weed = top_hat_dist(Ne, width, Aee, p)
-  weid = -top_hat_dist(Ni, width, Aei, p)
-  wied = top_hat_dist(Ne, width, Aie, p/2.) + circshift(top_hat_dist(Ne, width, Aie_NL, p/2.), Int64(round(Ne/2)))
-  wiid = -top_hat_dist(Ni, width, Aii, p)
-
   W = zeros(N,N)
   flat = []
   for i = 1:Ne
