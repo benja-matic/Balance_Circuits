@@ -1,11 +1,18 @@
-function top_hat_dist(N_pre, N_post, width, A, p)
-  an = A/(N_pre*p*width)
-  n_con = Int64(round(width*N_post)) #number of those neurons you synapse onto
+#N_in is the number of pre-synaptic neurons
+#N_in*width is the fraction of those neurons synapsing onto you
+#Now you have an array where the first N_in*width are populated by single-neuron strengths
+#reduce to connection probability p on that domain
+#now circularly shift to center the incoming connection footprint
+
+function top_hat_dist(N_in, width, A, p, circ)
+  incoming = zeros(N_in)
+  n_con = Int64(round(width*N_in))
   nc2 = Int64(round(n_con/2.))
-  out = zeros(N_post)
-  out[end-nc2+1:end] = an
-  out[1:nc2] = an
-  return out
+  x = rand(n_con) .<= p
+  f = zeros(n_con) .+ A/(n_con*p)
+  f .*= x
+  incoming[1:n_con] = f
+  return circshift(incoming, circ-nc2)
 end
 
 #number of neurons, connection density, synaptic strengths, percentage of neurons in the pool you connect to
@@ -15,27 +22,22 @@ function homogenous_weights(N, p, Aee, Aei, Aie, Aie_NL, Aii, width)
   Ni = Int64(round(N/5))
   Ne = N - Ni
 
-  weed = top_hat_dist(Ne, Ne, width, Aee, p)
-  weid = -top_hat_dist(Ni, Ne, width, Aei, p)
-  wied = top_hat_dist(Ne, Ni, width, Aie*2., p) + circshift(top_hat_dist(Ne, Ni, width, Aie_NL*2., p), Int64(round(Ni/2)))
-  wiid = -top_hat_dist(Ni, Ni, width, Aii, p)
+  weed = top_hat_dist(Ne, width, Aee, p)
+  weid = -top_hat_dist(Ni, width, Aei, p)
+  wied = top_hat_dist(Ne, width, Aie, p/2.) + circshift(top_hat_dist(Ne, width, Aie_NL, p/2.), Int64(round(Ne/2)))
+  wiid = -top_hat_dist(Ni, width, Aii, p)
 
   W = zeros(N,N)
+  flat = []
   for i = 1:Ne
-    W[1:Ne,i] = circshift(weed, i-1)
-    W[Ne+1:end, i] = circshift(wied, div(Ni*i, Ne)-1)
+    W[i, 1:Ne] = top_hat_dist(Ne, width, Aee, p, i-1)
+    W[i, Ne+1:end] = -top_hat_dist(Ni, width, Aei, p, div(Ni*i, Ne)-1)
   end
 
   for i = 1:Ni
-    W[1:Ne, Ne+i] = circshift(weid, div(Ne*i, Ni)-1)
-    W[Ne+1:end,Ne+i] = circshift(wiid, i-1)
+    W[Ne+i, 1:Ne] = top_hat_dist(Ne, width, Aie, p/2., div(Ne*i, Ni)-1) + top_hat_dist(Ne, width, Aie_NL, p/2., Int64(round(Ne/2)+div(Ne*i, Ni)-1))
+    W[Ne+i, Ne+1:end] = -top_hat_dist(Ni, width, Aii, p, i-1)
   end
-
-  Wx = rand(N,N) .<= p
-  W .*= Wx
-
-  Wc = rand(Ni, Ne) .< .5
-  W[Ne+1:end, 1:Ne] .*= Wc
 
   return W
 end
@@ -69,7 +71,7 @@ function Simple_Network_CSR(h, total, CSR, W, N, s1, s2, vth, tau_m, tau_s)
   V = rand(N)*vth
   V_buff = V
   drive = zeros(N)
-  FPe = div(Ne,5) #each pool is 2/5 of the network
+  FPe = div(Ne,6) #each pool is 2/5 of the network
   P1s = round(Int,Ne/4-FPe)
   P1e = round(Int,Ne/4+FPe)
   P2s = round(Int,3*Ne/4-FPe)
