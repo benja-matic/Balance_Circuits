@@ -247,6 +247,25 @@ function nt_diff(t, r, ntotal, half, netd_binsize)
   return ntd, nts
 end
 
+function nt_diff_H(t, r, ntotal, half, netd_binsize)
+
+  netd_bins = collect(1:netd_binsize:ntotal)
+  ntd = zeros(length(netd_bins)-1)
+  nts = zeros(length(netd_bins)-1)
+
+  for j = 2:length(netd_bins)
+    tf = find(netd_bins[j-1] .<= t .< netd_bins[j])
+    T = sum(r[tf] .> half)
+    B = sum(r[tf] .<= half)
+    NTD = T - B #################Differences in Spikes
+    ntd[j-1] = NTD
+    nts[j-1] = length(tf)
+    #println(T+B==length(tf))
+  end
+
+  return ntd, nts
+end
+
 #Given a an array with "win" and "lose" lables, and the corresponding time points...
 #Combine the losses and wins so you can easily analyze up-state or down-state activity for a single pool
 function splice_exons(intdices, tnb)
@@ -318,6 +337,53 @@ function WLD_01(s)
   push!(times, length(s))
   push!(flags, "end")
   return flags, times
+end
+
+function WLD_01(s, tl, th)
+  if maximum(s) < tl
+    return ["lose", "end"], [1, length(s)]
+  elseif minimum(s) >= th
+    return ["win", "end"], [1, length(s)]
+  elseif (tl <= maximum(s) <= th) & (tl <= minimum(s) <= th)
+    return ["draw", "end"], [1, length(s)]
+  end
+  times = []
+  flags = []
+  if s[1] >= th
+    flag = "win"
+  elseif tl <= s[1] <= th
+    flag = "draw"
+  elseif s[1] < tl
+    flag = "lose"
+  end
+
+  push!(times, 1)
+  push!(flags, flag)
+
+  s2 = s[2:end]
+  for i in eachindex(s2)
+    f1 = comp_01(s2[i], tl, th)
+    if f1 != flag
+      flag = f1
+      push!(times, i+1)
+      push!(flags, flag)
+    end
+  end
+  push!(times, length(s))
+  push!(flags, "end")
+  return flags, times
+end
+
+function comp_01(x, tl, th)
+  if x > th
+    return "win"
+  elseif tl <= x <= th
+    return "draw"
+  elseif x < tl
+    return "lose"
+  else
+    return "weird"
+  end
 end
 
 #WLD_01 but wihtout hard coding anything

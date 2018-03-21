@@ -5,26 +5,27 @@ srand(4321)
 function sd_2_k(sd)
   return 1./(2*pi*((sd)^2))
 end
-
-# kee = .48#parse(Float64, ARGS[1])
-# kei = .93#parse(Float64, ARGS[2])
-# kie_L = .97#parse(Float64, ARGS[3])
-# kii = .9#parse(Float64, ARGS[4])
-#
-# Aee = 54#parse(Float64, ARGS[5])
-# Aei = 104#parse(Float64, ARGS[6])
-# Aie_L = 180#parse(Float64, ARGS[7])
-# Aii= 150#parse(Float64, ARGS[8])
-
-kee = .26#parse(Float64, ARGS[1])
+######Rivalry with regular spiking
+kee = .48#parse(Float64, ARGS[1])
 kei = .93#parse(Float64, ARGS[2])
 kie_L = .97#parse(Float64, ARGS[3])
-kii = .5#parse(Float64, ARGS[4])
+kii = .9#parse(Float64, ARGS[4])
 
-Aee = 84#parse(Float64, ARGS[5])
-Aei = 314#parse(Float64, ARGS[6])
-Aie_L = 1319#parse(Float64, ARGS[7])
-Aii= 689#parse(Float64, ARGS[8])
+Aee = 54#parse(Float64, ARGS[5])
+Aei = 104#parse(Float64, ARGS[6])
+Aie_L = 180#parse(Float64, ARGS[7])
+Aii= 150#parse(Float64, ARGS[8])
+
+#####Rivalry with irregular spiking
+# kee = .26#parse(Float64, ARGS[1])
+# kei = .93#parse(Float64, ARGS[2])
+# kie_L = .97#parse(Float64, ARGS[3])
+# kii = .5#parse(Float64, ARGS[4])
+#
+# Aee = 84#parse(Float64, ARGS[5])
+# Aei = 314#parse(Float64, ARGS[6])
+# Aie_L = 1319#parse(Float64, ARGS[7])
+# Aii= 689#parse(Float64, ARGS[8])
 
 # kee = .18#parse(Float64, ARGS[1])
 # kei = .93#parse(Float64, ARGS[2])
@@ -41,7 +42,7 @@ kei = sd_2_k(kei)
 kie_L = sd_2_k(kie_L)
 kii = sd_2_k(kii)
 
-s_strength = 3.08#parse(Float64, ARGS[9])
+s_strength = 2.2#parse(Float64, ARGS[9])
 p = .34#parse(Float64, ARGS[10])
 Ne = 3200#parse(Int64, ARGS[11])
 # Ne = 1600
@@ -53,7 +54,7 @@ tau_ee = 2
 tau_ei = 2
 tau_ie = 2
 tau_ii = 2
-tau_ae = 550.
+tau_ae = 700.
 tau_ai = 1000.
 # g_e = 0.
 g_e = .001
@@ -68,12 +69,13 @@ s2 = s_strength
 
 # Ne = 2000
 # Ni = 500
-runtime = 50000 #ms
+# runtime = 500000
+runtime = 20000 #ms
 ntotal = round(runtime/h) #time points
 fbinsize = 400/h
 cbinsize = 50/h
 vbinszie = div(fbinsize, 2)
-half = div(Ne, 2)
+half_e = div(Ne, 2)
 
 Aee /= p
 Aei /= p
@@ -85,72 +87,89 @@ wee,wei,wie,wii = weights(Ne,Ni,kee, kei, kie_L, kii, Aee, Aei, Aie_L, Aii, p,p,
 # for g_e = .0001:0.005:.05
 te,re,ti,ri,kill_flag, e_top, e_bot, adapt_top, adapt_bot = euler_lif(h,runtime,Ne,Ni,wee,wei,wie,wii,s1,s2, vth, tau_m, tau_ee, tau_ei, tau_ie, tau_ii, tau_ae, tau_ai, g_e, g_i);
 
-ntd, nts = nt_diff(te, re, ntotal, half, 25/h)
+ntd, nts = nt_diff_H(te, re, ntotal, half, 150/h)
 s = ntd./nts #signal for dominances
-flags, times = WLD_01(s)
+flags, times = WLD_01(s, -.333, .333)
 
-t2, f2 = splice_reversions(flags, times)
-fw = find(f2 .== "win")
-fl = find(f2 .== "lose")
-tx = t2*250.
-d = convert(Array{Float64}, diff(250*t2))
+d = convert(Array{Float64}, diff(1500/10000. .* times))
 cvd = cv(d)
-a = []
-dt = diff(times*250.)
-dta = convert(Array{Float64}, dt)
+
+LP = .3
+
+dx = []
+for i in d
+    if i > LP
+        push!(dx, i)
+    end
+end
+dx = convert(Array{Float64}, dx)
+cvdlp = cv(dx)
+
+println("CVD is: $(cvd)")
+println("CVD_LP is: $(cvdlp)")
+
+# t2, f2 = splice_reversions(flags, times)
+# fw = find(f2 .== "win")
+# fl = find(f2 .== "lose")
+# tx = t2*250.
+# d = convert(Array{Float64}, diff(250*t2))
+# cvd = cv(d)
+# a = []
+# dt = diff(times*250.)
+# dta = convert(Array{Float64}, dt)
 
 
 
-#
-#
-TN, BN = Neurons_tb_ns(re, half, 10, 100) #neurons in either pool who fired at least 10 spkes in 50 seconds
-top, tdom, bot, bdom, nmz, tnmz = splice_flags(flags, times) #find win, lose, and draw times
-tbf, rbf = ligase(bot, bdom, te, re, BN) #bottom pool up states
-ttf, rtf = ligase(top, tdom, te, re, TN) #top pool up states
-tbdf, rbdf = ligase(top, tdom, te, re, BN) #bottom pool down states
-ttdf, rtdf = ligase(bot, bdom, te, re, TN) #top pool down states
-# countFT = count_train_intron(fbinsize, ttf, rtf, TN, length(TN), false)
-# countFB = count_train_intron(fbinsize, tbf, rbf, BN, length(BN), false)
-cbinsize = 1000/h
-#correlations
-cwTu = rand_pair_cor(cbinsize, ttf, rtf, TN, 1000)
-cwBu = rand_pair_cor(cbinsize, tbf, rbf, BN, 1000)
-cwBd = rand_pair_cor(cbinsize, ttdf, rtdf, TN, 1000)
-cwTd = rand_pair_cor(cbinsize, tbdf, rbdf, BN, 1000)
+# #
+# #
+# TN, BN = Neurons_tb_ns(re, half, 10, 100) #neurons in either pool who fired at least 10 spkes in 50 seconds
+# top, tdom, bot, bdom, nmz, tnmz = splice_flags(flags, times) #find win, lose, and draw times
+# tbf, rbf = ligase(bot, bdom, te, re, BN) #bottom pool up states
+# ttf, rtf = ligase(top, tdom, te, re, TN) #top pool up states
+# tbdf, rbdf = ligase(top, tdom, te, re, BN) #bottom pool down states
+# ttdf, rtdf = ligase(bot, bdom, te, re, TN) #top pool down states
+# # countFT = count_train_intron(fbinsize, ttf, rtf, TN, length(TN), false)
+# # countFB = count_train_intron(fbinsize, tbf, rbf, BN, length(BN), false)
+# cbinsize = 1000/h
+# #correlations
+# cwTu = rand_pair_cor(cbinsize, ttf, rtf, TN, 1000)
+# cwBu = rand_pair_cor(cbinsize, tbf, rbf, BN, 1000)
+# cwBd = rand_pair_cor(cbinsize, ttdf, rtdf, TN, 1000)
+# cwTd = rand_pair_cor(cbinsize, tbdf, rbdf, BN, 1000)
 
 # CVSTu = CV_ISI_D(top, TN, te, re)
 # CVSBu = CV_ISI_D(bot, BN, te, re)
 # CVSTd = CV_ISI_D(bot, TN, te, re)
 # CVSBd = CV_ISI_D(top, BN, te, re)
 
-subplot(221)
-plt[:hist](cwTu, 50)
-axvline(mean(cwTu), linestyle = "dashed", color = "g")
-gca()
-xlim(-1, 1)
-title("Up-State")
-ylabel("Pool 1")
-xticks([])
-subplot(222)
-plt[:hist](cwTd, 50)
-axvline(mean(cwTd), linestyle = "dashed", color = "g")
-gca()
-title("Down-State")
-xlim(-1, 1)
-xticks([])
-subplot(223)
-plt[:hist](cwBu, 50)
-axvline(mean(cwBu), linestyle = "dashed", color = "g")
-gca()
-ylabel("Pool 2")
-xlabel("Pairwise rsc")
-xlim(-1, 1)
-subplot(224)
-plt[:hist](cwBd, 50)
-axvline(mean(cwBd), linestyle = "dashed", color = "g")
-gca()
-xlabel("Pairwise rsc")
-xlim(-1, 1)
+# subplot(221)
+# plt[:hist](cwTu, 50)
+# axvline(mean(cwTu), linestyle = "dashed", color = "g")
+# gca()
+# xlim(-1, 1)
+# title("Up-State")
+# ylabel("Pool 1")
+# xticks([])
+# subplot(222)
+# plt[:hist](cwTd, 50)
+# axvline(mean(cwTd), linestyle = "dashed", color = "g")
+# gca()
+# title("Down-State")
+# xlim(-1, 1)
+# xticks([])
+# subplot(223)
+# plt[:hist](cwBu, 50)
+# axvline(mean(cwBu), linestyle = "dashed", color = "g")
+# gca()
+# ylabel("Pool 2")
+# xlabel("Pairwise rsc")
+# xlim(-1, 1)
+# subplot(224)
+# plt[:hist](cwBd, 50)
+# axvline(mean(cwBd), linestyle = "dashed", color = "g")
+# gca()
+# xlabel("Pairwise rsc")
+# xlim(-1, 1)
 
 
 # plt[:hist](d, 50)
@@ -454,3 +473,70 @@ xlim(-1, 1)
 # write_raster(etls, "riv_top_los_stds.txt")
 # write_raster(ebls, "riv_bot_los_stds.txt")
 #2624
+
+
+function nt_diff_H(t, r, ntotal, half, netd_binsize)
+
+  netd_bins = collect(1:netd_binsize:ntotal)
+  ntd = zeros(length(netd_bins)-1)
+  nts = zeros(length(netd_bins)-1)
+
+  for j = 2:length(netd_bins)
+    tf = find(netd_bins[j-1] .<= t .< netd_bins[j])
+    T = sum(r[tf] .> half)
+    B = sum(r[tf] .<= half)
+    NTD = T - B #################Differences in Spikes
+    ntd[j-1] = NTD
+    nts[j-1] = length(tf)
+    #println(T+B==length(tf))
+  end
+
+  return ntd, nts
+end
+
+function WLD_01(s, tl, th)
+  if maximum(s) < tl
+    return ["lose", "end"], [1, length(s)]
+  elseif minimum(s) >= th
+    return ["win", "end"], [1, length(s)]
+  elseif (tl <= maximum(s) <= th) & (tl <= minimum(s) <= th)
+    return ["draw", "end"], [1, length(s)]
+  end
+  times = []
+  flags = []
+  if s[1] >= th
+    flag = "win"
+  elseif tl <= s[1] <= th
+    flag = "draw"
+  elseif s[1] < tl
+    flag = "lose"
+  end
+
+  push!(times, 1)
+  push!(flags, flag)
+
+  s2 = s[2:end]
+  for i in eachindex(s2)
+    f1 = comp_01(s2[i], tl, th)
+    if f1 != flag
+      flag = f1
+      push!(times, i+1)
+      push!(flags, flag)
+    end
+  end
+  push!(times, length(s))
+  push!(flags, "end")
+  return flags, times
+end
+
+function comp_01(x, tl, th)
+  if x > th
+    return "win"
+  elseif tl <= x <= th
+    return "draw"
+  elseif x < tl
+    return "lose"
+  else
+    return "weird"
+  end
+end
