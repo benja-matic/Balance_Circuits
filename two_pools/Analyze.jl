@@ -29,6 +29,22 @@ function zeroness(x, funk, error_code) #checks if an initialized array of 0s got
   end
 end
 
+function score_analysis(re, N)
+  #1 = top, 2 = bot
+  half = div(N, 2)
+  a1 = length(find(re .<= half))
+  a2 = length(find(re .> half))
+  biggie = max(a1, a2)
+  spike_asymmetry = biggie/length(re)
+  if a1 > a2
+    bias = 2
+  else
+    bias = 1
+  end
+  return spike_asymmetry, bias
+end
+
+
 #NTF = Network Fano Factor
 #Discretize time into bins, loop over bins and get counts of spikes in a set of neurons in each time bin
 #Calculate the variability (i.e. Fano Factor = variance/mean) of this count series
@@ -362,6 +378,26 @@ function splice_flags(flags, times, netd_binsize)
   return top, tdom, bot, bdom, nmz, tnmz
 end
 
+function Neuron_finder(r, ns, mini)
+  Neurons = collect(Set{Float64}(r))
+  N = []
+  #S = []
+  for i in Neurons
+    a = find(r .== i)
+    if length(a) > ns
+      push!(N, i)
+      #push!(S, length(a))
+    end
+  end
+  if length(N) < mini
+    NF = -5
+    #SF = -5
+  else
+    NF = convert(Array{Float64}, N)
+    #SF = convert(Array{Int64}, S)
+  end
+  return NF
+end
 
 #Get the set of neurons who fired more than ns times in a simulation
 #Divide them up according to which pool they came from
@@ -776,9 +812,9 @@ function WTAN_Analysis(t, r, Input, end_trans, Ne, Ni, half_e, min_e_neurons, mi
   I_Rates = [length(find(ri_pt .== i))/rt for i=1:Ni]
 
   #counts
-  E_count_top = count_train(fbinsize, te_pt, re_pt, top_e_neurons, length(top_e_neurons))
-  E_count_bot = count_train(fbinsize, te_pt, re_pt, bot_e_neurons, length(bot_e_neurons))
-  I_count_all = count_train(fbinsize, ti_pt, ri_pt, I_Neurons, length(I_Neurons))
+  E_count_top = count_train_intron(fbinsize, te_pt, re_pt, top_e_neurons, length(top_e_neurons), false)
+  E_count_bot = count_train_intron(fbinsize, te_pt, re_pt, bot_e_neurons, length(bot_e_neurons), false)
+  I_count_all = count_train_intron(fbinsize, ti_pt, ri_pt, I_Neurons, length(I_Neurons), false)
   #FF
   FF_TOP = fano_train(E_count_top, -5)
   FF_BOT = fano_train(E_count_bot, -5)
@@ -906,4 +942,13 @@ function Rivalry_Analysis(t, r, Input, end_trans, Ne, Ni, half_e, min_e_neurons,
   end
 
   return te_pt, re_pt, TN, BN, d, cvd, flags, times, cvdlp, t2, f2, cvd2, top, tdom, bot, bdom, nmz, tnmz, FF_TOP, FF_BOT, cwTu, cwTd, cwBu, cwBd, CV_TU, CV_BU, CV_TD, CV_BD, etwm, ebwm, etlm, eblm
+end
+
+function write_array(filename, a)
+  newfile = open(filename, "w")
+  for i in eachindex(a)
+    text = "$(a[i])\n"
+    write(newfile, text)
+  end
+  close(newfile)
 end

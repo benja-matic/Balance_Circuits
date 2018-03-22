@@ -41,6 +41,12 @@ function sparse_rep(W,N)
     return flat
 end
 
+function interpolate_spike(v2, v1, vth)
+  x = (v1-v2) #slope by linear interpolation (dv/dt) = change in voltage for a single time step
+  t = (vth - v2)/x #time since spike to now
+  return t
+end
+
 function euler_lif_CSR(h, total, Ne, W, CSR, s1, s2, vth, tau_m, tau_s, tau_a, g_a)
 
   ntotal = round(Int64, total/h)
