@@ -6,6 +6,7 @@ Local circuits include networks with random or structured connections, delta pul
 
 ## Non-Local Circuits
 Non-local circuits include two E/I pools that are coupled.
+Simplest*.jl contain networks with explicit long-range connections from one excitatory pool to the opposing inhibitory pool.
 
 Euler_W.jl contains all the machinery to actually simulate a network. 
 Run_Euler_W.jl is for the user. Use this to play with parameters, etc. 
