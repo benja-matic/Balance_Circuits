@@ -10,7 +10,9 @@ Non-local circuits include two E/I pools that are coupled.
 Simplest*.jl contain networks with explicit long-range connections from one excitatory pool to the opposing inhibitory pool.
 
 Euler_W.jl contains all the machinery to actually simulate a network. 
+
 Run_Euler_W.jl is for the user. Use this to play with parameters, etc. 
+
 Analyze.jl contains all the machinery to analyze simulations.
 
 Zero out the parameter g_a to simulate with no spike-frequency-adaptation. If you're in winner-take-all, add g_a back in to get rivalry.
