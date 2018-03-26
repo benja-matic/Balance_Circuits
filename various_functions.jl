@@ -582,6 +582,39 @@ function sliding_correlation(s1, s2)
   end
 end
 
+#take two arrays of the same length
+#shift one by a time lag tau, padding with zeros
+#get the pearson correlation of the non-zero padded parts
+#do this for time lags -empezar:empezar
+
+function tau_cor(s1, s2, empezar)
+  ea = abs(empezar)
+  n = ea*2
+  cc = zeros(n+1) #correlate with 0 lag, and +/- ea
+  cc[ea+1] = cor(s1, s2) #julia can't index at zero so have to do this manually
+  for i = 2:ea+1
+    k1 = cor(s1[i:end][:], s2[1:end-(i-1)])
+    k2 = cor(s2[i:end][:], s1[1:end-(i-1)])
+    cc[ea+2-i] = k1
+    cc[ea+i] = k2
+  end
+  return cc
+end
+
+function tau_cov(s1, s2, empezar)
+  ea = abs(empezar)
+  n = ea*2
+  cc = zeros(n+1) #correlate with 0 lag, and +/- ea
+  cc[ea+1] = dot(s1, s2)/length(s1) #julia can't index at zero so have to do this manually
+  for i = 2:ea+1
+    k1 = dot(s1[i:end][:], s2[1:end-(i-1)])/(length(s1)-(i-1))
+    k2 = dot(s2[i:end][:], s1[1:end-(i-1)])/(length(s1)-(i-1))
+    cc[ea+2-i] = k1
+    cc[ea+i] = k2
+  end
+  return cc
+end
+
 #Forget if this does anything
 function network_sps(ttf)
   s = ttf[1]
