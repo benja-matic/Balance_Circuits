@@ -47,21 +47,27 @@ function interpolate_spike(v2, v1, vth)
   return t
 end
 
-function euler_lif_CSR(h, total, Ne, W, CSR, s1, s2, vth, tau_m, tau_s, tau_a, g_a)
+function euler_lif_CSR(h, total, Ne, W, CSR, s1, s2, vth, tau_m, tau_s, tau_a, g_a, Angle)
 
   ntotal = round(Int64, total/h)
   syn = zeros(N) #synapse
+  # syn_e = zeros(N) #for measuring just excitatory synapses
+  # syn_i = zeros(N) #for measuring just inhibitory synapses
   A = zeros(N) #adaptation
   V = rand(N)*vth #voltage
   V_buff = V
-  Input = zeros(N, ntotal)
+  # Input = zeros(N, ntotal)
+  # adapt = zeros(N, ntotal)
+  # E_input = zeros(N, ntotal) #parsed excitatory inputs coming into a neuron
+  # I_input = zeros(N, ntotal) #parsed inhibitory inputs coming into a neuron
+  # V_store = zeros(N, ntotal) #store the voltage
 
   drive = zeros(N) #feedforward input
   FPe = div(Ne,5)
-  P1s = round(Int,Ne/4-FPe)
-  P1e = round(Int,Ne/4+FPe)
-  P2s = round(Int,3*Ne/4-FPe)
-  P2e = round(Int,3*Ne/4+FPe)
+  P1s = round(Int,Ne/4-FPe) + Angle
+  P1e = round(Int,Ne/4+FPe) + Angle
+  P2s = round(Int,3*Ne/4-FPe) - Angle
+  P2e = round(Int,3*Ne/4+FPe) - Angle
 
   drive[P1s:P1e] = s1*h
   drive[P2s:P2e] = s2*h
@@ -77,10 +83,19 @@ function euler_lif_CSR(h, total, Ne, W, CSR, s1, s2, vth, tau_m, tau_s, tau_a, g
   for iter = 1:ntotal
 
       incoming = drive .+ (h .* syn) .- (A .* g_a)
-      Input[:, iter] = incoming
+      # Input[:, iter] = incoming
       V .+= incoming .- (V .* m_leak)
+
+      # E_input[:,iter] = drive .+ (h .* syn_e)
+      # I_input[:,iter] = (h .* syn_i) .- (A .* g_a)
+
       syn .-= (syn .* s_leak)
+      # syn_e .-= (syn_e .* s_leak)
+      # syn_i .-= (syn_i .* s_leak)
       A .-= A*a_leak
+
+      # adapt[:, iter] = A
+      # V_store[:,iter] = V
 
       vs = (V .> vth)
       vsm = sum(vs)
@@ -96,6 +111,9 @@ function euler_lif_CSR(h, total, Ne, W, CSR, s1, s2, vth, tau_m, tau_s, tau_a, g
           push!(time, iter-delta_h)
           if spe[j] <= Ne
             A[spe[j]] += 1.
+            # syn_e[CSR[js]] .+= W[CSR[js], js] .* lx
+          # else
+            # syn_i[CSR[js]] .+= W[CSR[js], js] .* lx
           end
         end
       end
@@ -105,5 +123,6 @@ function euler_lif_CSR(h, total, Ne, W, CSR, s1, s2, vth, tau_m, tau_s, tau_a, g
 
     end
 
-    return time, raster, Input
+    # return time, raster, Input, adapt, E_input, I_input, V_store
+    return time, raster
   end

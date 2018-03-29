@@ -8,6 +8,16 @@ def parse_inputs(f):
     c = np.array([float(b[i]) for i in range(len(b)-1)])
     return c
 
+def read_raster(x):
+    with open(x, 'r') as f:
+        a = f.read()
+    b = a.split('\n')
+    b.pop()
+    c = [i.split(',') for i in b]
+    te = np.array([float(i[0]) for i in c])
+    re = np.array([float(i[1]) for i in c])
+    return te, re
+
 ###Normalization Data
 NTIM = parse_inputs("N_TOP_IM.txt")
 NBIM = parse_inputs("N_BOT_IM.txt")
@@ -264,25 +274,7 @@ for i in axes:
 
 
 
-# fig, (ax1, ax2, ax3) = plt.subplots(3, sharex = True)
-# ax1.set_title("Histogrammed Input to Normalization Neuron")
-# ax1.hist(nrm, 100)
-# ax1.axvline(np.mean(nrm), color = 'k', linestyle = 'dashed', linewidth = 2)
-# ax1.axvline(0.1, color = 'r', linestyle = 'dashed', linewidth = 2)
-#
-# ax3.hist(win, 100)
-# ax3.axvline(np.mean(win), color = 'k', linestyle = 'dashed', linewidth = 2)
-# ax3.set_title("Histogrammed Input to Winning Neuron")
-# ax3.set_xlabel("Current (mV/dt)")
-# ax3.axvline(0.1, color = 'r', linestyle = 'dashed', linewidth = 2)
-#
-# ax2.hist(los, 100)
-# ax2.axvline(np.mean(los), color = 'k', linestyle = 'dashed', linewidth = 2)
-# ax2.set_title("Histogrammed Input to Losing Neuron")
-# ax2.set_ylabel("Frequency")
-# ax2.axvline(0.1, color = 'r', linestyle = 'dashed', linewidth = 2)
-#
-# plt.show()
+
 
 #set order to be loser, normalization, winner
 
@@ -434,3 +426,347 @@ plt.show()
 
 
 #histogram of means in normalization, winning, and losing pools
+
+
+
+
+fig, ax = plt.subplots(3, sharex = True)
+ax[0].set_title("Distribution of Mean Inputs")
+ax[0].hist(NTIM, 50)
+ax[0].set_ylabel("Normalization")
+ax[0].axvline(np.mean(NTIM), linestyle="dashed", color = "g")
+ax[0].axvline(0.1, linestyle="dashed", color = "r")
+ax[1].hist(WBIM, 50)
+ax[1].set_ylabel("Winner")
+ax[1].axvline(np.mean(WBIM), linestyle="dashed", color = "g")
+ax[1].axvline(0.1, linestyle="dashed", color = "r")
+ax[2].hist(WTIM, 50)
+ax[2].set_ylabel("Loser")
+ax[2].axvline(np.mean(WTIM), linestyle="dashed", color = "g")
+ax[2].axvline(0.1, linestyle="dashed", color = "r")
+
+fig, ax = plt.subplots(1,2, sharex=True)
+ax[0].hist(NTFF, 50)
+ax[1].hist(NTCV, 50)
+ax[0].set_title("Fano Factor")
+ax[1].set_title('$CV_{isi}$')
+ax[1].axvline(np.mean(NTCV), linestyle="dashed", color = "g")
+ax[1].axvline(1., linestyle="dashed", color = "r")
+ax[0].axvline(np.mean(NTFF), linestyle="dashed", color = "g")
+ax[0].axvline(1., linestyle="dashed", color = "r")
+
+
+fig, ax = plt.subplots(1)
+ax.hist(NTRSC, 50)
+ax.set_title('$r_{sc}$')
+ax.axvline(0., linestyle = "dashed", color = "r", alpha = .5, lw = 3.)
+ax.axvline(np.mean(NTRSC), linestyle = "dashed", color = "g")
+
+fig, ax = plt.subplots(1,3)
+ax[0].hist(NTFF, 50)
+ax[1].hist(NTCV, 50)
+ax[0].set_title("Fano Factor")
+ax[1].set_title('$CV_{isi}$')
+ax[1].axvline(np.mean(NTCV), linestyle="dashed", color = "g")
+ax[1].axvline(1., linestyle="dashed", color = "r")
+ax[0].axvline(np.mean(NTFF), linestyle="dashed", color = "g")
+ax[0].axvline(1., linestyle="dashed", color = "r")
+ax[2].hist(NTRSC, 50)
+ax[2].set_title('$r_{sc}$')
+ax[2].axvline(0., linestyle = "dashed", color = "r", alpha = .5, lw = 3.)
+ax[2].axvline(np.mean(NTRSC), linestyle = "dashed", color = "g")
+
+
+
+fig, ax = plt.subplots()
+ax.axis('off')
+ax.set_yticklabels([])
+ax.set_xticklabels([])
+ax.set_xticks([])
+ax.set_yticks([])
+
+ax0 = fig.add_subplot(2,2,1)
+ax0.hist(WTCV, 50)
+ax0.set_title('$CV_{isi}$')
+ax0.axvline(np.mean(WTCV), linestyle="dashed", color = "g")
+ax0.axvline(1., linestyle="dashed", color = "r")
+ax0.set_ylabel("Loser")
+
+ax1 = fig.add_subplot(2,2,2)
+ax1.hist(WTRSC, 50)
+ax1.set_title('$r_{sc}$')
+ax1.axvline(np.mean(WTRSC), linestyle="dashed", color = "g")
+ax1.axvline(0., linestyle="dashed", color = "r")
+
+ax2 = fig.add_subplot(2,2,3, sharex = ax0)
+ax2.hist(WBCV, 50)
+ax2.axvline(np.mean(WBCV), linestyle="dashed", color = "g")
+ax2.axvline(1., linestyle="dashed", color = "r")
+ax2.set_ylabel("Winner")
+
+ax3 = fig.add_subplot(2,2,4, sharex = ax1)
+ax3.hist(WBRSC, 50)
+ax3.axvline(np.mean(WBRSC), linestyle="dashed", color = "g")
+ax3.axvline(0., linestyle="dashed", color = "r")
+
+
+
+fig, ax = plt.subplots()
+ax.axis('off')
+ax.set_yticklabels([])
+ax.set_xticklabels([])
+ax.set_xticks([])
+ax.set_yticks([])
+
+ax0 = fig.add_subplot(2,2,1)
+ax0.hist(RT_W_CV, 50)
+ax0.set_title('$cv_{isi}$')
+ax0.axvline(1., linestyle="dashed", color = "r", lw = 3, alpha = .5)
+ax0.axvline(np.mean(RT_W_CV), linestyle="dashed", color = "g")
+ax0.set_ylabel("Up-State")
+
+ax1 = fig.add_subplot(2,2,2)
+ax1.hist(RT_W_RSC, 50)
+ax1.set_title('$r_{sc}$')
+ax1.axvline(np.mean(WTRSC), linestyle="dashed", color = "g")
+ax1.axvline(0., linestyle="dashed", color = "r")
+
+ax2 = fig.add_subplot(2,2,3, sharex = ax0)
+ax2.hist(RT_L_CV, 50)
+ax2.axvline(np.mean(RT_L_CV), linestyle="dashed", color = "g")
+ax2.axvline(1., linestyle="dashed", color = "r")
+ax2.set_ylabel("Down-State")
+
+ax3 = fig.add_subplot(2,2,4, sharex = ax1)
+ax3.hist(RT_L_RSC, 50)
+ax3.axvline(np.mean(RT_L_RSC), linestyle="dashed", color = "g")
+ax3.axvline(0., linestyle="dashed", color = "r")
+
+
+
+
+
+
+
+longs = ['AR_long_rast.txt', 'Balance_long_rast.txt', 'Brent_long_rast.txt']
+
+exec(open('C:\\Users\\cohenbp\\Documents\\Neuroscience\\Realistic_Simulations\\Hodgkin_Huxley_Adaptation\\read_rasters.py'))
+ntotal = 5000000
+tr, rr = read_raster('AR_long_rast.txt')
+tb, rb = read_raster('Balance_long_rast.txt')
+ts, rs = read_raster('Brent_long_rast.txt')
+m = np.where(rs <= 2500)
+ts = ts[m]
+rs = rs[m]
+
+k = np.where(tr < 100*10000)[0]
+k0 = k[-1]
+flags, times = WLD_01(sr, -1./3, 1./3)
+tx = times * 1500./10000.
+kt = np.where(tx < 100)[0]
+kt0 = kt[-1]
+plt.plot(tr[:k0]/10000., rr[:k0], "g.", ms = .1)
+plt.plot(tx[:kt0], np.ones(len(tx[:kt0]))*1600., "r.")
+
+k = np.where(tb < 100*10000)[0]
+k0 = k[-1]
+flags, times = WLD_01(sb, -1./3, 1./3)
+tx = times * 1500./10000.
+kt = np.where(tx < 100)[0]
+kt0 = kt[-1]
+plt.plot(tb[:k0]/10000., rb[:k0], "g.", ms = 1.)
+plt.plot(tx[:kt0], np.ones(len(tx[:kt0]))*1600., "r.")
+
+k = np.where(ts < 100*10000)[0]
+k0 = k[-1]
+flags, times = WLD_01(SS, -1./3, 1./3)
+tx = times * 1500./10000.
+kt = np.where(tx < 100)[0]
+kt0 = kt[-1]
+plt.plot(ts[:k0]/10000., rs[:k0], "g.", ms = 1.)
+plt.plot(tx[:kt0], np.ones(len(tx[:kt0]))*1250., "r.")
+
+
+half = 1600
+netd_binsize = 1500
+
+def d_get(sig):
+    flags, times = WLD_01(sig, -1./3, 1./3)
+    tx = times * 1500.
+    dx = np.diff(tx)
+    CV0 = CV(dx)
+    lp = 3000. #300ms
+    dlp = [i for i in dx if i > lp]
+    return np.array(dlp)
+
+sr = nt_diff_H(tr, rr, 5000000, 1600, 1500)
+sb = nt_diff_H(tb, rb, 5000000, 1600, 1500)
+SS = nt_diff_H(ts, rs, 5000000, 1250, 1500)
+
+
+flags, times = WLD_01(sb, -1./3, 1./3)
+dlp_B = d_get(sb)
+
+
+dlp_R = d_get(sr)/10000.
+dlp_B = d_get(sb)/10000.
+dlp_S = d_get(SS)/10000.
+fig, ax = plt.subplots(1,3, sharex = True)
+ax[0].hist(dlp_S, 40)
+ax[1].hist(dlp_R, 40)
+ax[2].hist(dlp_B, 40)
+plt.show()
+
+
+
+SS = np.load("Brent_Alternations_Long.npy")
+sr = np.load("Reg_alternations_long.npy")
+sb = np.load("Bal_alternations_long.npy")
+
+
+
+
+
+
+
+
+
+
+
+
+t, r = read_raster("Brent_Basic_Rast.txt")
+s1 = parse_inputs("Brent_S1.txt")
+s2 = parse_inputs("Brent_S2.txt")
+
+m = np.where(r < 2500)[0]
+te = t[m]
+re = r[m]
+
+fig, ax = plt.subplots(2,1, sharex = True)
+ax[0].plot(te, re, "g.", ms = 1.)
+ax[1].plot(s1, label = "Input 1")
+ax[1].plot(s2, label = "Input 2")
+
+
+
+
+
+DA = nt_diff_H(te, re, 200000, 1250, 1500)
+S_diff = s1 - s2
+s_sum = s1 + s2
+S = S_diff/s_sum
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###BW rasters
+
+contents = os.listdir(os.getcwd())
+files = []
+for i in contents:
+    if i[-3:] == 'txt':
+        files.append(i)
+
+sim2 = [i for i in files if i[3] == '2']
+sim3 = [i for i in files if i[3] == '3']
+sim5 = [i for i in files if i[3] == '5']
+data = np.zeros((12, len(sim5)))
+data3 = np.zeros((12, len(sim3)))
+data2 = np.zeros((12, len(sim2)))
+
+
+for i in range(len(sim5)):
+    t, r = read_raster(sim5[i])
+    data[:, i] = get_stats(t, r, ntotal, half, netd_binsize, fbinsize, cbinsize)
+
+
+for i in range(len(sim3)):
+    t, r = read_raster(sim3[i])
+    data3[:, i] = get_stats(t, r, ntotal, half, netd_binsize, fbinsize, cbinsize)
+
+
+for i in range(len(sim2)):
+    t, r = read_raster(sim2[i])
+    data2[:, i] = get_stats(t, r, ntotal, half, netd_binsize, fbinsize, cbinsize)
+
+
+s = np.array([float(i.split('_')[1]) for i in sim5])
+s2 = np.array([float(i.split('_')[1]) for i in sim2])
+s3 = np.array([float(i.split('_')[1]) for i in sim3])
+
+
+fig, ax = plt.subplots(2, sharex = True)
+ax[0].plot(s3, data3[5,:], "g.")
+ax[1].plot(s3, data3[2,:], ".", label = "Dominances")
+# ax[1].plot(s3, data3[8,:], ".", label = "ISI")
+fit1 = np.polyfit(s3, data3[5,:], deg = 1)
+fit2 = np.polyfit(s3, data3[2,:], deg = 1)
+ax[0].plot(s3, (fit1[0]*s3) + fit1[1], 'r')
+ax[1].plot(s3, (fit2[0]*s3) + fit2[1], 'r')
+ax[1].set_xlabel("Input Strength")
+ax[0].set_ylabel("Alternation Rate")
+ax[1].set_ylabel("CV")
+
+fig, ax = plt.subplots(1,2)
+ax[0].plot(s3, data3[2,:], ".", label = "Dominances")
+ax[0].plot(s3, data3[8,:], ".", label = "ISI")
+fit1 = np.polyfit(s3, data3[2,:], deg = 1)
+fit2 = np.polyfit(s3, data3[8,:], deg = 1)
+ax[0].plot(s3, (fit1[0]*s3) + fit1[1], 'r')
+ax[0].plot(s3, (fit2[0]*s3) + fit2[1], 'r')
+ax[0].set_xlabel("Input Strength")
+ax[0].set_ylabel("CV")
+ax[0].legend()
+ax[1].plot(data3[2,:], data3[8,:], ".")
+ax[1].set_xlabel("CVD")
+ax[1].set_ylabel("CVISI")
+fit3 = np.polyfit(data3[2,:], data3[8,:], deg = 1)
+ax[1].plot(data3[2,:], (fit3[0]*data3[2,:]) + fit3[1], 'r')
+plt.tight_layout()
+
+fig, ax = plt.subplots(2, sharex = True)
+ax[0].plot(s, data[5,:], "g.")
+ax[1].plot(s, data[2,:], ".", label = "Dominances")
+# ax[1].plot(s, data3[8,:], ".", label = "ISI")
+fit1 = np.polyfit(s, data[5,:], deg = 1)
+fit2 = np.polyfit(s, data[2,:], deg = 1)
+ax[0].plot(s, (fit1[0]*s) + fit1[1], 'r')
+ax[1].plot(s, (fit2[0]*s) + fit2[1], 'r')
+ax[1].set_xlabel("Input Strength")
+ax[0].set_ylabel("Alternation Rate")
+ax[1].set_ylabel("CV")
+# ax[1].axhline(data[2,0], linestyle = "dashed")
+
+
+
+
+
+
+te, re = read_raster(sim5[19])
+sig = nt_diff_H(te, re, ntotal, half, netd_binsize)
+flags, times = WLD_01(sig, -1./3, 1./3)
+tx = times * netd_binsize
+dx = np.diff(tx)
+t2, f2 = splice_reversions(flags, times)
+d = np.diff(np.array(netd_binsize)*t2)

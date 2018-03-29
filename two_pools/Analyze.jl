@@ -44,6 +44,26 @@ function score_analysis(re, N)
   return spike_asymmetry, bias
 end
 
+function fatigue_switches(aet, aeb, tauadapt, h)
+  aeb_pt = aeb[Int64(tauadapt*(3/h)):end];
+  aet_pt = aet[Int64(tauadapt*(3/h)):end];
+  if aeb_pt[1] > aet_pt[1]
+    flag = false
+  else aet_pt[1] > aeb_pt[1] #assuming fatigue variables are never exactly equal in else statement
+    flag = true
+  end
+  transition_times = []
+  for i = 2:length(aeb_pt)
+    now = aet_pt[i] > aeb_pt[i] #true if top more fatigued, else false
+    if now != flag # if
+      flag = !flag
+      push!(transition_times, i)
+    end
+  end
+  a = convert(Array{Float64}, transition_times)
+  m = mean(aet_pt[a])
+  return a, m
+end
 
 #NTF = Network Fano Factor
 #Discretize time into bins, loop over bins and get counts of spikes in a set of neurons in each time bin
@@ -103,6 +123,25 @@ function nt_diff_H(t, r, ntotal, half, netd_binsize)
     tf = find(netd_bins[j-1] .<= t .< netd_bins[j])
     T = sum(r[tf] .> half)
     B = sum(r[tf] .<= half)
+    NTD = T - B #################Differences in Spikes
+    ntd[j-1] = NTD
+    nts[j-1] = length(tf)
+    #println(T+B==length(tf))
+  end
+
+  return ntd, nts
+end
+
+function nt_diff_angle(t, r, ntotal, P2s, P2e, netd_binsize)
+
+  netd_bins = collect(1:netd_binsize:ntotal)
+  ntd = zeros(length(netd_bins)-1)
+  nts = zeros(length(netd_bins)-1)
+
+  for j = 2:length(netd_bins)
+    tf = find(netd_bins[j-1] .<= t .< netd_bins[j])
+    T = sum(P2s .< r[tf] .< P2e)
+    B = length(tf) - T
     NTD = T - B #################Differences in Spikes
     ntd[j-1] = NTD
     nts[j-1] = length(tf)
@@ -644,7 +683,8 @@ function ligate_inputs(introns, input1, input2)
   for i in introns
     s1 = input1[i[1]:i[2]]
     s2 = input2[i[1]:i[2]]
-    i1, i2 = cat(1, i1, s1), cat(1, i2, s2)
+    i1 = cat(1, i1, s1)
+    i2 = cat(1, i2, s2)
   end
   s1, s2 = i1[2:end], i2[2:end]
   return s1, s2
@@ -843,7 +883,7 @@ function WTAN_Analysis(t, r, Input, end_trans, Ne, Ni, half_e, min_e_neurons, mi
 end
 end
 
-function Rivalry_Analysis(t, r, Input, end_trans, Ne, Ni, half_e, min_e_neurons, min_i_neurons, fbinsize, cbinsize, netd_binsize, FPe)
+function Rivalry_Analysis(t, r, Input, adapt, end_trans, Ne, Ni, half_e, min_e_neurons, min_i_neurons, fbinsize, cbinsize, netd_binsize, FPe)
 
   P1s = round(Int,Ne/4-FPe)
   P1e = round(Int,Ne/4+FPe)
@@ -863,7 +903,20 @@ function Rivalry_Analysis(t, r, Input, end_trans, Ne, Ni, half_e, min_e_neurons,
   ti = t[ix]
   ri = r[ix]
 
-  ntd, nts = nt_diff_H(te, re, ntotal, half, netd_binsize)
+  aeb = zeros(length(adapt[1,:][:]))
+  aet = zeros(length(aeb))
+  for i = 1:half_e
+    aeb .+= adapt[i,:][:]
+    aet .+= adapt[i+half_e,:][:]
+  end
+
+  a_diff = aeb .- aet
+  a_sum = aeb .+ aet
+  a_frac = a_diff ./ a_sum
+  a_frac = a_frac[2:end] #first entry is sometimes NaN
+  a_flags, a_times = WLD_01(a_frac, -.333, .333)
+
+  ntd, nts = nt_diff_H(te, re, ntotal, half_e, netd_binsize)
   s = ntd ./ nts #signal for dominances
   flags, times = WLD_01(s, -.333, .333)
 
@@ -890,15 +943,19 @@ function Rivalry_Analysis(t, r, Input, end_trans, Ne, Ni, half_e, min_e_neurons,
   cvd2 = cv(d) ### Another estimate of CVD
 
   TN, BN = Neurons_tb_ns(re, half_e, 10, 100) #neurons in either pool who fired at least 10 spkes in simulation
-  top, tdom, bot, bdom, nmz, tnmz = splice_flags(flags, times, netd_binszie) #find win, lose, and draw times
+  top, tdom, bot, bdom, nmz, tnmz = splice_flags(flags, times, netd_binsize) #find win, lose, and draw times
   tbf, rbf = ligase(bot, bdom, te, re, BN) #bottom pool up states
   ttf, rtf = ligase(top, tdom, te, re, TN) #top pool up states
   tbdf, rbdf = ligase(top, tdom, te, re, BN) #bottom pool down states
   ttdf, rtdf = ligase(bot, bdom, te, re, TN) #top pool down states
   countFT = count_train_intron(fbinsize, ttf, rtf, TN, length(TN), false)
   countFB = count_train_intron(fbinsize, tbf, rbf, BN, length(BN), false)
+  countFBD = count_train_intron(fbinsize, tbdf, rbdf, BN, length(BN), false)
+  countFTD = count_train_intron(fbinsize, ttdf, rtdf, TN, length(TN), false)
   FF_TOP = fano_train(countFT, -5)
   FF_BOT = fano_train(countFB, -5)
+  FF_TOPD = fano_train(countFTD, -5)
+  FF_BOTD = fano_train(countFBD, -5)
   #correlations
   cwTu = rand_pair_cor(cbinsize, ttf, rtf, TN, 1000)
   cwBu = rand_pair_cor(cbinsize, tbf, rbf, BN, 1000)
@@ -920,6 +977,7 @@ function Rivalry_Analysis(t, r, Input, end_trans, Ne, Ni, half_e, min_e_neurons,
   ebd = zeros(length(P1), Int64(tdom) + length(top));
   ebu = zeros(length(P2), Int64(bdom) + length(bot));
   etd = zeros(length(P1), Int64(bdom) + length(bot));
+
   println("Ligating Input Time Series for All Neurons\nThis part takes forever")
   println("If you aren't interested in measuring inputs, you can subsample in time or neurons, or not measure inputs at all")
   println("To do that, you'll have to mess with Euler_W.jl")
@@ -941,7 +999,7 @@ function Rivalry_Analysis(t, r, Input, end_trans, Ne, Ni, half_e, min_e_neurons,
     eblm[i] = mean(ebd[i,:])
   end
 
-  return te_pt, re_pt, TN, BN, d, cvd, flags, times, cvdlp, t2, f2, cvd2, top, tdom, bot, bdom, nmz, tnmz, FF_TOP, FF_BOT, cwTu, cwTd, cwBu, cwBd, CV_TU, CV_BU, CV_TD, CV_BD, etwm, ebwm, etlm, eblm
+  return te_pt, re_pt, TN, BN, d, cvd, flags, times, cvdlp, t2, f2, cvd2, top, tdom, bot, bdom, nmz, tnmz, FF_TOP, FF_BOT, FF_TOPD, FF_BOTD, cwTu, cwTd, cwBu, cwBd, CV_TU, CV_BU, CV_TD, CV_BD, etwm, ebwm, etlm, eblm
 end
 
 function write_array(filename, a)
@@ -952,3 +1010,40 @@ function write_array(filename, a)
   end
   close(newfile)
 end
+#
+function write_raster(filename, t, r)
+  newfile = open(filename, "w")
+  for i in eachindex(t)
+    text = "$(t[i]), $(r[i])\n"
+    write(newfile, text)
+  end
+  close(newfile)
+end
+
+function ligate_inputs(introns, input1, input2)
+  i1, i2 = Float64[0], Float64[0]
+  for i in introns
+    s1 = input1[i[1]:i[2]]
+    s2 = input2[i[1]:i[2]]
+    i1 = cat(1, i1, s1)
+    i2 = cat(1, i2, s2)
+  end
+  s1, s2 = i1[2:end], i2[2:end]
+  return s1, s2
+end
+
+function zscore(x)
+    m = mean(x)
+    s = std(x)
+    x1 = x .- m
+    x2 = x1 ./s
+    return x2
+end
+
+
+# for i = 1:runtime
+#   EXW[i] = sum(Exc[P1s:P1e, i][:])
+#   IXW[i] = sum(Inh[P1s:P1e, i][:])
+#   EXL[i] = sum(Exc[P2s:P2e, i][:])
+#   IXL[i] = sum(Inh[P2s:P2e, i][:])
+# end
