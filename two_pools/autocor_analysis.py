@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 
 #simulate a single neuron with OU noise
 def single_neuron(runtime, drive, mu, sigma, tau):
+
     vth = 20. #threshold
     tau_m = 20. #membrane time constant
     h = 0.1 #dt
@@ -11,29 +12,13 @@ def single_neuron(runtime, drive, mu, sigma, tau):
     htm = h/tau_m
     ntotal = int(runtime/h) #time points
 
-    #get weiner process first
-    r = np.random.normal(0, 1, ntotal) #
-    sh = np.sqrt(h)/tau
-    r *= sh #rescale the noise to get rid of effect of time constant on amplitude
-    rn = np.zeros(ntotal)
-    x0 = np.random.normal()
-    x = x0
-    for i in range(ntotal):
-        dxh = -x*ht + r[i]
-        rn[i] = x + dxh
-        x += dxh
-
-    #rescale process
-    scale = sigma*tau
-    rn *= scale
-    v0 = np.random.uniform(0, 1) * vth
-
-    inputs = np.zeros(ntotal)
+    inputs = np.random.normal(mu*h, sigma*h, ntotal)
+    inputs *= np.sqrt(h)
     spikes = []
+    v0 = 15.
     v = v0
     d = drive*h
     for i in range(ntotal):
-        inputs[i] = mu*h + rn[i]
         I = inputs[i] + d -v*htm
         v += I
         if v >= vth:
@@ -41,6 +26,27 @@ def single_neuron(runtime, drive, mu, sigma, tau):
             v -= vth
     return spikes, inputs
 
+
+def FI(runtime, mu):
+
+    vth = 20. #threshold
+    tau_m = 20. #membrane time constant
+    h = 0.1 #dt
+    htm = h/tau_m
+    ntotal = int(runtime/h) #time points
+    sigma = np.sqrt(mu)
+    inputs = np.random.normal(mu, sigma, ntotal)
+    inputs *= np.sqrt(h)
+    spikes = []
+    v0 = 15.
+    v = v0
+    for i in range(ntotal):
+        I = inputs[i] - v*htm
+        v += I
+        if v >= vth:
+            spikes.append(i)
+            v -= vth
+    return spikes, inputs
 #read in a time series from a file
 def parse_inputs(f):
     a = open(f, 'r')
@@ -76,6 +82,9 @@ def autocovariance_n(x):
     return autocov
 
 
+spikes, inputs = FI(10000, .2)
+
+plt.plot(spikes, np.ones(len(spikes)), "g.")
 
 # los = parse_inputs("e_bot_l1.txt")
 # win = parse_inputs("e_top_w1.txt")

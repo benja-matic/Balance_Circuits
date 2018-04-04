@@ -768,5 +768,53 @@ sig = nt_diff_H(te, re, ntotal, half, netd_binsize)
 flags, times = WLD_01(sig, -1./3, 1./3)
 tx = times * netd_binsize
 dx = np.diff(tx)
+dlp = [i for i in dx if i > 30000]
 t2, f2 = splice_reversions(flags, times)
-d = np.diff(np.array(netd_binsize)*t2)
+d = np.diff(np.array(netd_binsize)*t2)/100000.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###########################L2
+
+
+ntotal = 10000000.
+import os
+contents = os.listdir(os.getcwd())
+files = []
+for i in contents:
+    if i[-3:] == 'txt':
+        files.append(i)
+
+
+sim5 = [i for i in files if i[3+3] == '5']
+s = np.array([float(i.split('_')[2]) for i in sim5])
+
+
+data = np.zeros((6, len(sim5)))
+
+for i in range(len(sim5)):
+    print i
+    te, ri = read_raster(sim5[i])
+    data[:,i] = get_L2(t, r, ntotal, half, netd_binsize, fbinsize, cbinsize)
+    # res = get_L2(t, r, ntotal, half, netd_binsize, fbinsize, cbinsize)
+    # for j in range(len(res)):
+    #     data[j,i] = res[j]
+
+
+
+
+# [MDT, MDB, len(times), MD2, MDT2, MDB2]
+plt.plot(s, data[0,:], "r.", label = "Pool 1")
+plt.plot(s, data[1,:], "b.", label = "Pool 2")
+plt.plot(s, data[2,:], "g.", label = "Alternations")

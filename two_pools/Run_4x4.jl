@@ -15,10 +15,10 @@ srand(4321)
 # ICV2 = []
 # means = []
 
-Aee = 5.
+Aee = 50.
 Aei = 200.
 Aie = 500.
-Aie_NL = 200.
+Aie_NL = 600.
 Aii = 200.
 
 #Aie = [200, 400, 600, 800, 1000]

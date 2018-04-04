@@ -186,6 +186,7 @@ function euler_lif_CSR_4x4_s(h, total, N, W, CSR, s, vth, tau_m, tau_s, tau_a, g
   raster_e = Float64[0]
   time_i = Float64[0]
   raster_i = Float64[0]
+  LX = []
 
   m_leak = h/tau_m
   s_leak = h/tau_s
@@ -228,7 +229,8 @@ function euler_lif_CSR_4x4_s(h, total, N, W, CSR, s, vth, tau_m, tau_s, tau_a, g
         for j = 1:vesm
           js = spe[j]
           delta_h = interpolate_spike(Ve[js], Ve_buff[js], vth)
-          lx = exp(delta_h/tau_m)
+          lx = exp(-delta_h*h/tau_s)
+          push!(LX, lx)
           syn_ee .+= W[1:Ne2, js] .* lx
           if js <= NeL
             syn_ie[1:NiL] .+= W[Ne2+1:Ne2+NiL, js] .* lx
@@ -251,7 +253,8 @@ function euler_lif_CSR_4x4_s(h, total, N, W, CSR, s, vth, tau_m, tau_s, tau_a, g
         for j = 1:vism
           js = spi[j]
           delta_h = interpolate_spike(Vi[js], Vi_buff[js], vth)
-          lx = exp(delta_h/tau_m)
+          lx = exp(-delta_h*h/tau_s)
+          push!(LX, lx)
           syn_ii .+= W[Ne2+1:N, js+Ne2] .* lx
           syn_ei .+= W[1:Ne2, js+Ne2] .* lx
           push!(raster_i, js)
@@ -265,5 +268,5 @@ function euler_lif_CSR_4x4_s(h, total, N, W, CSR, s, vth, tau_m, tau_s, tau_a, g
       Vi_buff = Vi
 
     end
-    return time_e, raster_e, time_i, raster_i, SEE, SEI, SIE, SIEL, SII
+    return time_e, raster_e, time_i, raster_i, SEE, SEI, SIE, SIEL, SII, LX
   end
