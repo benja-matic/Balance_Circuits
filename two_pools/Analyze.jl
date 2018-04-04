@@ -883,6 +883,65 @@ function WTAN_Analysis(t, r, Input, end_trans, Ne, Ni, half_e, min_e_neurons, mi
 end
 end
 
+function WTAN_no_input(t, r, end_trans, Ne, Ni, half_e, min_e_neurons, min_i_neurons, fbinsize, cbinsize, FPe)
+  P1s = round(Int,Ne/4-FPe)
+  P1e = round(Int,Ne/4+FPe)
+  P2s = round(Int,3*Ne/4-FPe)
+  P2e = round(Int,3*Ne/4+FPe)
+
+  P1 = P1s:P1e
+  P2 = P2s:P2e
+
+  rt = ((ntotal - end_trans)/1000.)*h
+
+  ex = find(r .<= Ne)
+  te = t[ex]
+  re = r[ex]
+
+  ix = find(r .> Ne)
+  ti = t[ix]
+  ri = r[ix]
+tem = find(te.> end_trans)
+  te_pt = te[tem]
+  re_pt = re[tem]
+  tim = find(ti.> end_trans)
+  ti_pt = ti[tim]
+  ri_pt = ri[tim]
+
+  wta_ness, bias = score_analysis(re_pt, Ne)
+  top_e_neurons, bot_e_neurons = Neurons_tb_ns(re_pt, half_e, 10, min_e_neurons)
+  if ((top_e_neurons == -5) & (bot_e_neurons == -5))
+    return "too few neurons spiking for analysis"
+  else
+  I_Neurons = Neuron_finder(ri_pt, 10, min_i_neurons)
+  #rates
+  E_Rates = [length(find(re_pt .== i))/rt for i=1:Ne]
+  I_Rates = [length(find(ri_pt .== i))/rt for i=1:Ni]
+
+  #counts
+  E_count_top = count_train_intron(fbinsize, te_pt, re_pt, top_e_neurons, length(top_e_neurons), false)
+  E_count_bot = count_train_intron(fbinsize, te_pt, re_pt, bot_e_neurons, length(bot_e_neurons), false)
+  I_count_all = count_train_intron(fbinsize, ti_pt, ri_pt, I_Neurons, length(I_Neurons), false)
+  #FF
+  FF_TOP = fano_train(E_count_top, -5)
+  FF_BOT = fano_train(E_count_bot, -5)
+  FF_INH = fano_train(I_count_all, -5)
+  #cv
+  CV_TOP = CV_ISI_ALLTIME(top_e_neurons, te_pt, re_pt)
+  CV_BOT = CV_ISI_ALLTIME(bot_e_neurons, te_pt, re_pt)
+  CV_INH = CV_ISI_ALLTIME(I_Neurons, ti_pt, ri_pt)
+  #synchrony
+  RSC_TOP = rand_pair_cor(cbinsize, te_pt, re_pt, top_e_neurons, 1000)
+  RSC_BOT = rand_pair_cor(cbinsize, te_pt, re_pt, bot_e_neurons, 1000)
+  RSC_INH = rand_pair_cor(cbinsize, ti_pt, ri_pt, I_Neurons, 500)
+  #inputs
+
+  return wta_ness, bias, E_Rates, I_Rates, CV_TOP, CV_BOT, CV_INH, RSC_TOP, RSC_BOT, RSC_INH, FF_TOP, FF_BOT, FF_INH, te_pt, re_pt
+end
+end
+
+
+
 function Rivalry_Analysis(t, r, Input, adapt, end_trans, Ne, Ni, half_e, min_e_neurons, min_i_neurons, fbinsize, cbinsize, netd_binsize, FPe)
 
   P1s = round(Int,Ne/4-FPe)
@@ -1047,3 +1106,60 @@ end
 #   EXL[i] = sum(Exc[P2s:P2e, i][:])
 #   IXL[i] = sum(Inh[P2s:P2e, i][:])
 # end
+
+
+# for i in range(N):
+#   for j in range(N):
+#     for k in range(N):
+#       text = "julia ./run_simplest.jl {0} {1} {2}\n".format(Aee[i], Aie[j], Aie_NL[k])
+#       newfile.write(text)
+function sim_2_theory(SEE, SEI, SIE, SIEL, SII, fe, fi, cth, re1, re2, ri1, ri2, n)
+
+    FE = fe - cth
+    FI = fi - cth
+
+    n0 = div(n, 2)
+
+    see1 = zeros(n0)
+    see2 = zeros(n0)
+    sie1 = zeros(n0)
+    sie2 = zeros(n0)
+    sieL1 = zeros(n0)
+    sieL2 = zeros(n0)
+    sii1 = zeros(n0)
+    sii2 = zeros(n0)
+    sei1 = zeros(n0)
+    sei2 = zeros(n0)
+
+    for i = 1:n0
+        see1[i] = mean(SEE[i,:][:])
+        see2[i] = mean(SEE[i+n0,:][:])
+        sie1[i] = mean(SIE[i,:][:])
+        sie2[i] = mean(SIE[i+n0,:][:])
+        sieL1[i] = mean(SIEL[i,:][:])
+        sieL2[i] = mean(SIEL[i+n0,:][:])
+        sei1[i] = mean(SEI[i,:][:])
+        sei2[i] = mean(SEI[i+n0,:][:])
+        sii1[i] = mean(SII[i,:][:])
+        sii2[i] = mean(SII[i+n0,:][:])
+    end
+
+    WEE_1 = mean(see1)/re1
+    WEE_2 = mean(see2)/re2
+    WIE_1 = mean(sie1)/re1
+    WIE_2 = mean(sie2)/re2
+    WIEL_1 = mean(sieL1)/re2
+    WIEL_2 = mean(sieL2)/re1
+    WEI_1 = mean(sei1)/ri1
+    WEI_2 = mean(sei2)/ri2
+    WII_1 = mean(sii1)/ri1
+    WII_2 = mean(sii2)/ri2
+
+    return WEE_1, WEE_2, WIE_1, WIE_2, WIEL_1, WIEL_2, WEI_1, WEI_2, WII_1, WII_2, FE, FI
+end
+
+# function theory_rates(WEE_1, WEE_2, WIE_1, WIE_2, WIEL_1, WIEL_2, WEI_1, WEI_2, WII_1, WII_2, FE, FI)
+#
+#   RE1 = ((WII_1*FE) - (WEI_1*FI))/((WEI_1*))
+#
+#
