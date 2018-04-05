@@ -1158,8 +1158,10 @@ function sim_2_theory(SEE, SEI, SIE, SIEL, SII, fe, fi, cth, re1, re2, ri1, ri2,
     return WEE_1, WEE_2, WIE_1, WIE_2, WIEL_1, WIEL_2, WEI_1, WEI_2, WII_1, WII_2, FE, FI
 end
 
-# function theory_rates(WEE_1, WEE_2, WIE_1, WIE_2, WIEL_1, WIEL_2, WEI_1, WEI_2, WII_1, WII_2, FE, FI)
-#
-#   RE1 = ((WII_1*FE) - (WEI_1*FI))/((WEI_1*))
-#
-#
+function theory_rates(WEE_1, WEE_2, WIE_1, WIE_2, WIEL_1, WIEL_2, WEI_1, WEI_2, WII_1, WII_2, FE, FI)
+
+  RE1 = ((WII_1*FE) - (WEI_1*FI))/(((WEI_1*(WIE_1+WIEL_1))-(WII_1*WEE_1)))
+  RI1 = ((FE*(WIE_1+WIEL_1))-(WEE_1*FI))/(((WEI_1*(WIE_1+WIEL_1))-(WII_1*WEE_1)))
+
+  return RE1, RI1
+end

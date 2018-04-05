@@ -15,10 +15,17 @@ srand(4321)
 # ICV2 = []
 # means = []
 
+RET = []
+RIT = []
+RES = []
+RIS = []
+
+Aie = [200, 300, 400, 500, 600, 700, 800, 900, 1000]
+for i in Aie
 Aee = 50.
 Aei = 200.
-Aie = 500.
-Aie_NL = 600.
+Aie = i
+Aie_NL = 100.
 Aii = 200.
 
 #Aie = [200, 400, 600, 800, 1000]
@@ -74,10 +81,10 @@ NSEB = length(find(re .<= NeL))
 NSIT = length(find(ri .> NiL))
 NSIB = length(find(ri .<= NiL))
 
-MER1 = mean(E_R_bot)*h*(1/1000.)
-MER2 = mean(E_R_top)*h*(1/1000.)
-MIR1 = mean(I_R_bot)*h*(1/1000.)
-MIR2 = mean(I_R_top)*h*(1/1000.)
+MER1 = mean(E_R_bot)*(1/1000.)
+MER2 = mean(E_R_top)*(1/1000.)
+MIR1 = mean(I_R_bot)*(1/1000.)
+MIR2 = mean(I_R_top)*(1/1000.)
 
 println("##RESULT $(wta_ness), $(bias), $(mean(E_R_bot)), $(mean(E_R_top)), $(mean(I_R_top)), $(mean(I_R_bot)), $(mean(CV_ETOP)), $(mean(CV_EBOT)), $(mean(CV_ITOP)), $(mean(CV_IBOT))")
 
@@ -87,7 +94,31 @@ println("##PARAMETERS $(WEE_1), $(WEE_2), $(WIE_1), $(WIE_2), $(WIEL_1), $(WIEL_
 
 
 
+RE_THEORY, RI_THEORY = theory_rates(abs(WEE_1), abs(WEE_2), abs(WIE_1), abs(WIE_2), abs(WIEL_1), abs(WIEL_2), abs(WEI_1), abs(WEI_2), abs(WII_1), abs(WII_2), FE, FI)
 
+
+push!(RET, RE_THEORY)
+push!(RIT, RI_THEORY)
+push!(RES, MER1)
+push!(RIS, MIR1)
+end
+
+Aie = [200, 300, 400, 500, 600, 700, 800, 900, 1000]
+
+RET .*= 1000.
+RIT .*= 1000.
+RES .*= 1000.
+RIS .*= 1000.
+
+plot(RET, RES, ".", ms = 20., label = "E Cells")
+plot(RIT, RIS, ".", ms = 20., label = "I Cells")
+xticks(fontsize = 32)
+yticks(fontsize = 32)
+xlabel("Theory", fontsize = 36)
+ylabel("Simulation", fontsize = 36)
+title("Scanning Aie Local", fontsize = 36)
+plot([0.1, 1.1], [0.1, 1.1], color = "r", label = "x=y")
+legend()
 
 # I_ = zeros(N);
 # for i = 1:N
