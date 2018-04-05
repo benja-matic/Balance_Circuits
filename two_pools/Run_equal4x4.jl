@@ -1,4 +1,4 @@
-include("4x4_separate_synapses.jl")
+include("4x4_equal_EI.jl")
 include("Analyze.jl")
 
 srand(4321)
@@ -19,17 +19,13 @@ RET = []
 RIT = []
 RES = []
 RIS = []
-ECV1 = []
-ECV2 = []
-ICV1 = []
-ICV2 = []
-
-Aie = [200, 300, 400, 500, 600, 700, 800, 900, 1000]
-for i in Aie
-Aee = 50.
-Aei = 200.
-Aie = i
-Aie_NL = 100.
+#
+# Aie = [200, 300, 400, 500, 600, 700, 800, 900, 1000]
+# for i in Aie
+Aee = 25.
+Aei = 300.
+Aie = 300.
+Aie_NL = 0.
 Aii = 200.
 
 #Aie = [200, 400, 600, 800, 1000]
@@ -38,16 +34,15 @@ s_strength = 3.08
 p = .2
 
 N = 16000
-IFRAC = 2.
+
 N_local = Int64(round(N/2)) #divide the network into two EI circuits
-Ni_local = Int64(round(N_local/IFRAC))
-Ne_local = Int64(N_local-Ni_local)
-Ne2 = Ne_local*2
-N2 = Int64(round(N/2)) #divide the network into two EI circuits
-NiL = Int64(round(N2/IFRAC))
-NeL = Int64(N2-NiL)
-Ne2 = NeL*2
-Ni2 = NiL*2
+half = round(Int64, N_local/2)
+
+# N2 = div(N, 2)
+# NeL = div(4*N2, 5)
+# NiL = N2-NeL
+# Ne2 = NeL*2
+# Ni2 = NiL*2
 
 vth = 20
 tau_m = 20.
@@ -63,27 +58,27 @@ ntotal = round(runtime/h) #time points
 fbinsize = 400/h
 cbinsize = 100/h
 netd_binsize = 50/h
-end_trans = 0.
+end_trans = 2000
 rt = ((ntotal - end_trans)/1000.)*h
 
-W = homogenous_4x4_weights(N, IFRAC, p, Aee, Aei, Aie, Aie_NL, Aii);
+W = homogenous_4x4_weights(N, p, Aee, Aei, Aie, Aie_NL, Aii);
 CSR = sparse_rep(W, N);
 
-@time te, re, ti, ri, SEE, SEI, SIE, SIEL, SII = euler_lif_CSR_4x4_s(h, runtime, N, IFRAC, W, CSR, s_strength, vth, tau_m, tau_s, tau_a, g_a)
+@time te, re, ti, ri, SEE, SEI, SIE, SIEL, SII = euler_lif_CSR_4x4_s(h, runtime, N, W, CSR, s_strength, vth, tau_m, tau_s, tau_a, g_a)
 
-wta_ness, bias = score_analysis(re, Ne2)
-top_e_neurons, bot_e_neurons = Neurons_tb_ns(re, NeL, 10, min_e_neurons)
-top_i_neurons, bot_i_neurons = Neurons_tb_ns(ri, NiL, 10, min_i_neurons)
+wta_ness, bias = score_analysis(re, N_local)
+top_e_neurons, bot_e_neurons = Neurons_tb_ns(re, half, 10, min_e_neurons)
+top_i_neurons, bot_i_neurons = Neurons_tb_ns(ri, half, 10, min_i_neurons)
 
 CV_ETOP = CV_ISI_ALLTIME(top_e_neurons, te, re)
 CV_EBOT = CV_ISI_ALLTIME(bot_e_neurons, te, re)
 CV_ITOP = CV_ISI_ALLTIME(top_i_neurons, ti, ri)
 CV_IBOT = CV_ISI_ALLTIME(bot_i_neurons, ti, ri)
 
-E_R_top = [length(find(re .== i))/rt for i=NeL+1:Ne2]
-E_R_bot = [length(find(re .== i))/rt for i=1:NeL]
-I_R_top = [length(find(ri .== i))/rt for i=NiL+1:Ni2]
-I_R_bot = [length(find(ri .== i))/rt for i=1:NiL]
+E_R_top = [length(find(re .== i))/rt for i=half+1:N_local]
+E_R_bot = [length(find(re .== i))/rt for i=1:half]
+I_R_top = [length(find(ri .== i))/rt for i=half+1:N_local]
+I_R_bot = [length(find(ri .== i))/rt for i=1:half]
 
 # NSET = length(find(re .> NeL))
 # NSEB = length(find(re .<= NeL))
@@ -101,8 +96,6 @@ WEE_1, WEE_2, WIE_1, WIE_2, WIEL_1, WIEL_2, WEI_1, WEI_2, WII_1, WII_2, FE, FI =
 
 println("##PARAMETERS $(WEE_1), $(WEE_2), $(WIE_1), $(WIE_2), $(WIEL_1), $(WIEL_2), $(WEI_1), $(WEI_2), $(WII_1), $(WII_2), $(FE), $(FI)")
 
-
-
 RE_THEORY, RI_THEORY = theory_rates(abs(WEE_1), abs(WEE_2), abs(WIE_1), abs(WIE_2), abs(WIEL_1), abs(WIEL_2), abs(WEI_1), abs(WEI_2), abs(WII_1), abs(WII_2), FE, FI)
 
 
@@ -110,30 +103,42 @@ push!(RET, RE_THEORY)
 push!(RIT, RI_THEORY)
 push!(RES, MER1)
 push!(RIS, MIR1)
-push!(ECV1, mean(CV_ETOP))
-push!(ECV2, mean(CV_EBOT))
-push!(ICV1, mean(CV_ITOP))
-push!(ICV2, mean(CV_IBOT))
+# end
 
-end
+# Aie = [200, 300, 400, 500, 600, 700, 800, 900, 1000]
+#
+# RET .*= 1000.
+# RIT .*= 1000.
+# RES .*= 1000.
+# RIS .*= 1000.
 
-Aie = [200, 300, 400, 500, 600, 700, 800, 900, 1000]
 
-RET .*= 1000.
-RIT .*= 1000.
-RES .*= 1000.
-RIS .*= 1000.
+# figure(1)
+# plot(RET, RES, ".", ms = 20., label = "E Cells")
+# plot(RIT, RIS, ".", ms = 20., label = "I Cells")
+# xticks(fontsize = 16)
+# yticks(fontsize = 16)
+# xlabel("Theory", fontsize = 16)
+# ylabel("Simulation", fontsize = 16)
+# title("Scanning Aie Local", fontsize = 16)
+# plot([0.1, 10.1], [0.1, 10.1], color = "r", label = "x=y")
+# legend()
 
-plot(RET, RES, ".", ms = 20., label = "E Cells")
-plot(RIT, RIS, ".", ms = 20., label = "I Cells")
-xticks(fontsize = 16)
-yticks(fontsize = 16)
-xlabel("Theory", fontsize = 16)
-ylabel("Simulation", fontsize = 16)
-title("Scanning Aie Local", fontsize = 16)
-plot([0.1, 10.1], [0.1, 10.1], color = "r", label = "x=y")
-legend()
-
+# subplot(211)
+# plot(Aie, RET, ".", label = "Theory E cells")
+# plot(Aie, RES, ".", label = "Sim E cells")
+# legend()
+# # xlabel("Aie")
+# ylabel("Firing Rate")
+# title("Theory vs. Sim: E Cells")
+# subplot(212)
+# plot(Aie, RIT, ".", label = "Theory I cells")
+# plot(Aie, RIS, ".", label = "Sim I cells")
+# legend()
+# xlabel("Aie")
+# ylabel("Firing Rate")
+# title("Theory vs. Sim: I Cells")
+# tight_layout()
 # I_ = zeros(N);
 # for i = 1:N
 #     I_[i] = mean(Input[i,:][:])

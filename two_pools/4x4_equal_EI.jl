@@ -9,85 +9,78 @@ function top_hat_dist(N_in, width, A, p, circ)
   return circshift(incoming, circ-nc2)
 end
 
-function homogenous_4x4_weights(N, IFRAC, p, Aee, Aei, Aie, Aie_NL, Aii)
+function homogenous_4x4_weights(N, p, Aee, Aei, Aie, Aie_NL, Aii)
 
   N_local = Int64(round(N/2)) #divide the network into two EI circuits
-  Ni_local = Int64(round(N_local/IFRAC))
-  Ne_local = Int64(N_local-Ni_local)
-  Ne2 = Ne_local*2
-  ke_local = round(Int64, Ne_local*p)
-  ki_local = round(Int64, Ni_local*p)
-  kie = round(Int64, Ne_local*(p/2)) #half from your local circuit, half from the other local circuit
+  half = round(Int64, N_local/2)
+  k_local = round(Int64, half*p)
+  kie = round(Int64, half*(p/2)) #half from your local circuit, half from the other local circuit
 
-  Jee = Aee/ke_local
-  Jei = -Aei/ki_local
+  Jee = Aee/k_local
+  Jei = -Aei/k_local
   Jie = Aie/kie
   Jie_NL = Aie_NL/kie
-  Jii = -Aii/ki_local
+  Jii = -Aii/k_local
 
   W = zeros(N,N)
 
   ###EE AND EI FOR BOTH CIRCUITS
-  for i = 1:Ne_local
+  for i = 1:half
 
-    ee1_inds = rand(1:Ne_local, ke_local) #EE local
-    ei1_inds = rand(Ne2+1:Ne2+Ni_local, ki_local) #IE local
-    ee2_inds = rand(Ne_local+1:Ne2, ke_local) #other EE local
-    ei2_inds = rand(N_local + Ne_local+1:N, ki_local) #other IE local
+    ee1_inds = rand(1:half, k_local) #EE local
+    ei1_inds = rand(N_local+1:N_local+half, k_local) #IE local
+
+    ee2_inds = rand(half+1:N_local, k_local) #other EE local
+    ei2_inds = rand(N_local+half+1:N, k_local) #other IE local
+
+    ie1_inds = rand(1:half, kie)
+    ie2_inds = rand(half+1:N_local, kie)
+
+    ieL1_inds = rand(half+1:N_local, kie)
+    ieL2_inds = rand(1:half, kie)
+
+    ii1_inds = rand(N_local+1:N_local+half, k_local)
+    ii2_inds = rand(N_local+half+1:N, k_local)
 
     for j in eachindex(ee1_inds) #pool1 EE
       W[i, ee1_inds[j]] += Jee
     end
 
     for j in eachindex(ee2_inds) #pool2 EE
-      W[i+Ne_local, ee2_inds[j]] += Jee
+      W[i+half, ee2_inds[j]] += Jee
     end
 
-    for j in eachindex(ei1_inds) #pool 1 EI
+    for j in eachindex(ei1_inds) #pool1 EI
       W[i, ei1_inds[j]] += Jei
     end
 
-    for j in eachindex(ei2_inds) #pool 2 EI
-      W[i+Ne_local, ei2_inds[j]] += Jei
+    for j in eachindex(ei2_inds) #pool2 EI
+      W[i+half, ei2_inds[j]] += Jei
     end
 
-  end
-
-  ###IE AND II FOR BOTH CIRCUITS
-  for i = Ne2+1:Ne2+Ni_local
-
-    ie1_inds = rand(1:Ne_local, kie)
-    ii1_inds = rand(Ne2+1: Ne2+Ni_local, ki_local)
-    ie2_inds = rand(Ne_local:Ne2, kie)
-    ii2_inds = rand(Ne2+Ni_local:N, ki_local)
-
-    ieNL1_inds = rand(Ne_local+1:Ne2, kie)
-    ieNL2_inds = rand(1:Ne_local, kie)
-
-    for j in eachindex(ie1_inds)
-      W[i, ie1_inds[j]] += Jie
+    for j in eachindex(ie1_inds) #pool1 IE
+      W[i+N_local, ie1_inds[j]] += Jie
     end
 
-    for j in eachindex(ii1_inds)
-      W[i, ii1_inds[j]] += Jii
+    for j in eachindex(ie2_inds) #pool2 IE
+      W[i+N_local+half, ie2_inds[j]] += Jie
     end
 
-    for j in eachindex(ie2_inds)
-      W[i+Ni_local, ie2_inds[j]] += Jie
+    for j in eachindex(ieL1_inds) #pool1 IE Non_Local
+      W[i+N_local, ieL1_inds[j]] += Jie_NL
     end
 
-    for j in eachindex(ii2_inds)
-      W[i+Ni_local, ii2_inds[j]] += Jii
+    for j in eachindex(ieL2_inds) #pool2 IE Non_Local
+      W[i+N_local+half, ieL2_inds[j]] += Jie_NL
     end
 
-    for j in eachindex(ieNL1_inds)
-      W[i, ieNL1_inds[j]] += Jie_NL
+    for j in eachindex(ii1_inds) #pool1 II
+      W[i+N_local, ii1_inds[j]] += Jii
     end
 
-    for j in eachindex(ieNL2_inds)
-      W[i+Ni_local, ieNL2_inds[j]] += Jie_NL
+    for j in eachindex(ii2_inds) #pool2 II
+      W[i+N_local+half, ii2_inds[j]] += Jii
     end
-
   end
 
   return W
@@ -108,12 +101,12 @@ function interpolate_spike(v2, v1, vth)
   return t
 end
 
-function euler_lif_CSR_4x4_s(h, total, N, IFRAC, W, CSR, s, vth, tau_m, tau_s, tau_a, g_a)
+function euler_lif_CSR_4x4_s(h, total, N, W, CSR, s, vth, tau_m, tau_s, tau_a, g_a)
 
-  N2 = Int64(round(N/2)) #divide the network into two EI circuits
-  NiL = Int64(round(N2/IFRAC))
-  NeL = Int64(N2-NiL)
+  N2 = div(N, 2)
+  NeL = round(Int64, N2/2)
   Ne2 = NeL*2
+  NiL = round(Int64, N2/2)
   Ni2 = NiL*2
   drive = zeros(Ne2) .+ s*h
 
@@ -146,6 +139,7 @@ function euler_lif_CSR_4x4_s(h, total, N, IFRAC, W, CSR, s, vth, tau_m, tau_s, t
   raster_e = Float64[0]
   time_i = Float64[0]
   raster_i = Float64[0]
+  # LX = []
 
   m_leak = h/tau_m
   s_leak = h/tau_s

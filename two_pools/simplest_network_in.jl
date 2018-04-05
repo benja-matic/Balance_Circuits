@@ -101,7 +101,7 @@ function Simple_Network_CSR(h, total, CSR, W, N, s1, s2, vth, tau_m, tau_s)
         js = spe[j]
         #interpolate spike time
         delta_h = interpolate_spike(V[js], V_buff[js], vth) #time since the spike (units of h)
-        lx = exp(delta_h/tau_m)
+        lx = exp(-delta_h*h/tau_s)
         syn[CSR[js]] += W[CSR[js], js].*lx #modify amplitude of synapse by decay since estimated time of spike
         push!(raster,js)
   	    push!(time,iter-delta_h)

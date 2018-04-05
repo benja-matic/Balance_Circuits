@@ -1165,3 +1165,36 @@ function theory_rates(WEE_1, WEE_2, WIE_1, WIE_2, WIEL_1, WIEL_2, WEI_1, WEI_2, 
 
   return RE1, RI1
 end
+
+function sim_2_theory_2x2(SEE, SEI, SIE, SII, fe, fi, cth, re1, ri1, n)
+
+    FE = fe - cth
+    FI = fi - cth
+
+    see1 = zeros(n)
+    sie1 = zeros(n)
+    sii1 = zeros(n)
+    sei1 = zeros(n)
+
+    for i = 1:n
+        see1[i] = mean(SEE[i,:][:])
+        sie1[i] = mean(SIE[i,:][:])
+        sei1[i] = mean(SEI[i,:][:])
+        sii1[i] = mean(SII[i,:][:])
+    end
+
+    WEE_1 = mean(see1)/re1
+    WIE_1 = mean(sie1)/re1
+    WEI_1 = mean(sei1)/ri1
+    WII_1 = mean(sii1)/ri1
+
+    return WEE_1, WIE_1, WEI_1, WII_1, FE, FI
+end
+
+function theory_rates_2x2(WEE_1, WIE_1, WEI_1, WII_1, FE, FI)
+
+  RE1 = ((WII_1*FE) - (WEI_1*FI))/((WEI_1*WIE_1)-(WII_1*WEE_1))
+  RI1 = ((WIE_1*FE) - (WEE_1*FI))/((WEI_1*WIE_1)-(WII_1*WEE_1))
+
+  return RE1, RI1
+end

@@ -41,8 +41,8 @@ def FI(runtime, mu):
     v0 = 15.
     v = v0
     for i in range(ntotal):
-        I = inputs[i] - v*htm
-        v += I
+        I = inputs[i]
+        v += I - v*htm
         if v >= vth:
             spikes.append(i)
             v -= vth
@@ -85,6 +85,8 @@ def autocovariance_n(x):
 spikes, inputs = FI(10000, .2)
 
 plt.plot(spikes, np.ones(len(spikes)), "g.")
+plt.show()
+
 
 # los = parse_inputs("e_bot_l1.txt")
 # win = parse_inputs("e_top_w1.txt")

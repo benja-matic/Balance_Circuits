@@ -136,7 +136,7 @@ function euler_lif_CSR(h, total, Ne, W, CSR, s1, s2, w2, input_width, vth, tau_m
         for j = 1:vsm
           js = spe[j]
           delta_h = interpolate_spike(V[js], V_buff[js], vth)
-          lx = exp(delta_h/tau_m)
+          lx = exp(-delta_h*h/tau_s)
           syn[CSR[js]] += W[CSR[js], js] .* lx
           push!(raster, js)
           push!(time, iter-delta_h)
