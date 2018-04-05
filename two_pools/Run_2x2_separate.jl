@@ -10,22 +10,31 @@ RIS = []
 ECV = []
 ICV = []
 
-Aie = [700, 800, 900, 1000]
-for i in Aie
+# Aie = [700, 800, 900, 1000]
+# for i in Aie
 Aee = 100.
-Aei = 400.
-Aie = i
-Aii = 300.
+Aei = 300.
+Aie = 700.
+Aii = 400.
 
 #Aie = [200, 400, 600, 800, 1000]
-
-s_strength = 3.08
-p = .15
-
-N = 16000
+#
+NNNN = [2000, 4000, 8000, 16000]
+# N = 2000
+for N in NNNN
 IFRAC = 2.
 Ni = Int64(round(N/IFRAC))
 Ne = N - Ni
+
+s_strength = 3.08
+p = 0.1
+p0 = sqrt(2000)*p/sqrt(N)
+
+# sn = sqrt(N)
+# Aee *= sn
+# Aei *= sn
+# Aie *= sn
+# Aii *= sn
 
 vth = 20
 tau_m = 20.
@@ -56,8 +65,8 @@ CV_I = CV_ISI_ALLTIME(i_neurons, ti, ri)
 E_R = [length(find(re .== i))/rt for i=1:Ne]
 I_R = [length(find(ri .== i))/rt for i=1:Ni]
 
-MER = mean(E_R)*(1/1000.)
-MIR = mean(I_R)*(1/1000.)
+MER = mean(E_R)#*(1/1000.)
+MIR = mean(I_R)#*(1/1000.)
 
 println("##RESULT $(mean(E_R)), $(mean(I_R)), $(mean(CV_E)), $(mean(CV_I))")
 
@@ -76,22 +85,33 @@ push!(ICV, mean(CV_I))
 
 end
 
-Aie = [700, 800, 900, 1000]
+# Aie = [700, 800, 900, 1000]
 
-RET .*= 1000.
-RIT .*= 1000.
-RES .*= 1000.
-RIS .*= 1000.
+#RET .*= 1000.
+#RIT .*= 1000.
+#RES .*= 1000.
+#RIS .*= 1000.
 
-plot(RET, RES, ".", ms = 20., label = "E Cells")
-plot(RIT, RIS, ".", ms = 20., label = "I Cells")
-xticks(fontsize = 16)
-yticks(fontsize = 16)
-xlabel("Theory", fontsize = 16)
-ylabel("Simulation", fontsize = 16)
-title("Scanning Aie Local", fontsize = 16)
-plot([0.1, 10.1], [0.1, 10.1], color = "r", label = "x=y")
-legend()
+NNNN = [2000, 4000, 8000, 16000]
+EDIFF = (RES .- RET)
+IDIFF = (RIS .- RIT)
+EDA = [abs(i) for i in EDIFF]
+IDA = [abs(i) for i in IDIFF]
+
+
+plot(log(NNNN), log(EDA), ".", ms = 20., label = "E")
+plot(log(NNNN), log(IDA), ".", ms = 20., label = "I")
+
+
+# plot(RET, RES, ".", ms = 20., label = "E Cells")
+# plot(RIT, RIS, ".", ms = 20., label = "I Cells")
+# xticks(fontsize = 16)
+# yticks(fontsize = 16)
+# xlabel("Theory", fontsize = 16)
+# ylabel("Simulation", fontsize = 16)
+# title("Scanning Aie Local", fontsize = 16)
+# plot([0.1, 10.1], [0.1, 10.1], color = "r", label = "x=y")
+# legend()
 
 # I_ = zeros(N);
 # for i = 1:N
@@ -124,14 +144,19 @@ legend()
 # ICV2 = []
 
 #
-# Aie = [200, 300, 400, 500]
+# Aie = [700, 800, 900, 1000]
 # subplot(211)
-# plot(Aie, ER1, ".", label = "Excitatory Pool 1")
-# plot(Aie, ER2, ".", label = "Excitatory Pool 2")
-# plot(Aie, IR1, ".", label = "Inhibitory Pool 1")
-# plot(Aie, IR2, ".", label = "Inhibitory Pool 2")
+# plot(Aie, RET, ".", ms = 20., label = "THEORY E CELLS")
+# plot(Aie, RES, ".", ms = 20., label = "SIM E CELLS")
 # legend()
 # ylabel("Mean Firing Rate")
+# subplot(212)
+# plot(Aie, RIT, ".", ms = 20., label = "THEORY I CELLS")
+# plot(Aie, RIS, ".", ms = 20., label = "SIM I CELLS")
+# legend()
+# ylabel("Mean Firing Rate")
+
+
 # subplot(212)
 # plot(Aie, ECV1, ".", label = "Excitatory Pool 1")
 # plot(Aie, ECV2, ".", label = "Excitatory Pool 2")
