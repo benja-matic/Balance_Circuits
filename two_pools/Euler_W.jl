@@ -73,7 +73,7 @@ function euler_lif_CSR(h, total, Ne, W, CSR, s1, s2, w2, input_width, vth, tau_m
   A = zeros(N) #adaptation
   V = rand(N)*vth #voltage
   V_buff = V
-  Input = zeros(N, ntotal)
+  # Input = zeros(N, ntotal)
   # adapt = zeros(N, ntotal)
   # E_input = zeros(N, ntotal) #parsed excitatory inputs coming into a neuron
   # I_input = zeros(N, ntotal) #parsed inhibitory inputs coming into a neuron
@@ -114,7 +114,7 @@ function euler_lif_CSR(h, total, Ne, W, CSR, s1, s2, w2, input_width, vth, tau_m
   for iter = 1:ntotal
 
       incoming = drive .+ (h .* syn) .- (A .* g_a)
-      Input[:, iter] = incoming
+      # Input[:, iter] = incoming
       V .+= incoming .- (V .* m_leak)
 
       # E_input[:,iter] = drive .+ (h .* syn_e)
@@ -155,5 +155,5 @@ function euler_lif_CSR(h, total, Ne, W, CSR, s1, s2, w2, input_width, vth, tau_m
     end
 
     # return time, raster, Input, adapt, E_input, I_input, V_store
-    return time, raster, Input
+    return time, raster#, Input
   end
