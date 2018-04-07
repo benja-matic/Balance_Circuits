@@ -113,7 +113,7 @@ function euler_lif_CSR(h, total, Ne, W, CSR, s1, s2, w2, input_width, vth, tau_m
   kill_flag = false
   for iter = 1:ntotal
 
-      incoming = drive .+ (h .* syn) .- (A .* g_a)
+      incoming = drive .+ (h .* syn) .- (h .* A .* g_a)
       # Input[:, iter] = incoming
       V .+= incoming .- (V .* m_leak)
 
