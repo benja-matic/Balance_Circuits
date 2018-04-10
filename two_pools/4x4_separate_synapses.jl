@@ -69,8 +69,8 @@ function homogenous_4x4_weights(N, IFRAC, k, Aee, Aei, Aie, Aie_NL, Aii)
 
     ie1_inds = rand(1:Ne_local, kie)
     ii1_inds = rand(Ne2+1: Ne2+Ni_local, ki_local)
-    ie2_inds = rand(Ne_local:Ne2, kie)
-    ii2_inds = rand(Ne2+Ni_local:N, ki_local)
+    ie2_inds = rand(Ne_local+1:Ne2, kie)
+    ii2_inds = rand(Ne2+Ni_local+1:N, ki_local)
 
     ieNL1_inds = rand(Ne_local+1:Ne2, kie)
     ieNL2_inds = rand(1:Ne_local, kie)

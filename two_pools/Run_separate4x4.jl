@@ -4,17 +4,21 @@ include("Analyze.jl")
 srand(4321)
 
 
-# wta = []
-# ERS1 = []
-# ERS2 = []
-# IRS1 = []
-# IRS2 = []
-# ERT1 = []
-# ERT2 = []
-# IRT1 = []
-# IRT2 = []
-# EIG1 = []
-# EIG2 = []
+wta = []
+ERS1 = []
+ERS2 = []
+IRS1 = []
+IRS2 = []
+ERT1 = []
+ERT2 = []
+IRT1 = []
+IRT2 = []
+b1L = []
+b2L = []
+c1L = []
+c2L = []
+d1L = []
+d2L = []
 # ECV1 = []
 # ECV2 = []
 # ICV1 = []
@@ -37,7 +41,7 @@ srand(4321)
 Aee = 10.
 Aei = 30.
 Aie = 70.
-Aie_NL =80.
+Aie_NL = 20.
 Aii = 40.
 
 #Aie = [200, 400, 600, 800, 1000]
@@ -99,6 +103,7 @@ I_R_bot = [length(find(ri .== i))/rt for i=1:NiL]
 # NSIT = length(find(ri .> NiL))
 # NSIB = length(find(ri .<= NiL))
 
+#leaving it in Hz, passing it into sim_2_theory, and the sim_2_theory output into theory_rates will just leave theory_rates output in Hz
 MER1 = mean(E_R_bot)#*(1/1000.)
 MER2 = mean(E_R_top)#*(1/1000.)
 MIR1 = mean(I_R_bot)#*(1/1000.)
@@ -110,16 +115,16 @@ WEE_1, WEE_2, WIE_1, WIE_2, WIEL_1, WIEL_2, WEI_1, WEI_2, WII_1, WII_2, FE, FI =
 
 println("##PARAMETERS $(WEE_1), $(WEE_2), $(WIE_1), $(WIE_2), $(WIEL_1), $(WIEL_2), $(WEI_1), $(WEI_2), $(WII_1), $(WII_2), $(FE), $(FI)")
 
-
-
 RE1_THEORY, RI1_THEORY, RE2_THEORY, RI2_THEORY = theory_rates(abs(WEE_1), abs(WEE_2), abs(WIE_1), abs(WIE_2), abs(WIEL_1), abs(WIEL_2), abs(WEI_1), abs(WEI_2), abs(WII_1), abs(WII_2), FE, FI)
+
+# RE1_THEORYc, RI1_THEORYc, RE2_THEORYc, RI2_THEORYc = theory_rates(abs(Aee), abs(Aee), abs(Aie), abs(Aie), abs(Aie_NL), abs(Aie_NL), abs(Aei), abs(Aei), abs(Aii), abs(Aii), s_strength, 0.)
 
 Input_E1, Input_E2, Input_I1, Input_I2 = estimate_I(SEE, SEI, SIE, SIEL, SII, s_strength, 100)
 
-gti_e1 = estimated_gti(Input_E1)
-gti_e2 = estimated_gti(Input_E2)
-gti_i1 = estimated_gti(Input_I1)
-gti_i2 = estimated_gti(Input_I2)
+gti_e1 = estimated_gtiX(Input_E1)
+gti_e2 = estimated_gtiX(Input_E2)
+gti_i1 = estimated_gtiX(Input_I1)
+gti_i2 = estimated_gtiX(Input_I2)
 
 b1 = get_b_g(WEE_1, WII_1, gti_e1, gti_i1)
 b2 = get_b_g(WEE_2, WII_2, gti_e2, gti_i2)
@@ -130,27 +135,28 @@ c2 = get_c_g(WEE_2, WEI_2, WIE_2, WII_2, gti_e2, gti_i2)
 d1 = get_d_g(WEI_1, WIEL_1, gti_e1, gti_i1)
 d2 = get_d_g(WEI_2, WIEL_2, gti_e2, gti_i2)
 
-eig1 = b1 + sqrt(c1+d1)
-eig2 = b2 + sqrt(c2+d2)
+push!(ERT1, RE1_THEORY)
+push!(ERT2, RE2_THEORY)
+push!(IRT1, RI1_THEORY)
+push!(IRT2, RI2_THEORY)
 
-# push!(ERT1, RE1_THEORY)
-# push!(ERT2, RE2_THEORY)
-# push!(IRT1, RI1_THEORY)
-# push!(IRT2, RI2_THEORY)
-#
-# push!(ERS1, MER1)
-# push!(ERS2, MER2)
-# push!(IRS1, MIR1)
-# push!(IRS2, MIR2)
-#
-# push!(EIG1, eig1)
-# push!(EIG2, eig2)
+push!(ERS1, MER1)
+push!(ERS2, MER2)
+push!(IRS1, MIR1)
+push!(IRS2, MIR2)
+
+push!(b1L, b1)
+push!(b2L, b2)
+push!(c1L, c1)
+push!(c2L, c2)
+push!(d1L, d1)
+push!(d2L, d2)
 # println("\n\n\n $(MER1), $(MER2), $(MIR1), $(MIR2), $(RE1_THEORY), $(RE2_THEORY), $(RI1_THEORY), $(RI2_THEORY), $(EIG1), $(EIG2)\n\n\n")
 # push!(ECV1, mean(CV_ETOP))
 # push!(ECV2, mean(CV_EBOT))
 # push!(ICV1, mean(CV_ITOP))
 # push!(ICV2, mean(CV_IBOT))
-# 
+#
 # end
 
 # Aeis = [20,30,40,50,60]
@@ -201,20 +207,20 @@ eig2 = b2 + sqrt(c2+d2)
 
 #
 # Aie = [200, 300, 400, 500]
-subplot(211)
-plot(Aeis, ERS1, ".", label = "Sim Pool 1")
-plot(Aeis, ERS2, ".", label = "Sim Pool 2")
-plot(Aeis, ERT1, ".", label = "Theory Pool 1")
-plot(Aeis, ERT2, ".", label = "Theory Pool 2")
-legend()
-ylabel("Mean Firing Rate")
-subplot(212)
-plot(Aeis, IRS1, ".", label = "Sim Pool 1")
-plot(Aeis, IRS2, ".", label = "Sim Pool 2")
-plot(Aeis, IRT1, ".", label = "Theory Pool 1")
-plot(Aeis, IRT2, ".", label = "Theory Pool 2")
-legend()
-xlabel("Aei")
+# subplot(211)
+# plot(Aeis, ERS1, ".", label = "Sim Pool 1")
+# plot(Aeis, ERS2, ".", label = "Sim Pool 2")
+# plot(Aeis, ERT1, ".", label = "Theory Pool 1")
+# plot(Aeis, ERT2, ".", label = "Theory Pool 2")
+# legend()
+# ylabel("Mean Firing Rate")
+# subplot(212)
+# plot(Aeis, IRS1, ".", label = "Sim Pool 1")
+# plot(Aeis, IRS2, ".", label = "Sim Pool 2")
+# plot(Aeis, IRT1, ".", label = "Theory Pool 1")
+# plot(Aeis, IRT2, ".", label = "Theory Pool 2")
+# legend()
+# xlabel("Aei")
 
 
 # sEm = zeros(100)
