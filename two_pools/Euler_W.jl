@@ -68,6 +68,10 @@ function euler_lif_CSR(h, total, Ne, W, CSR, s1, s2, w2, input_width, vth, tau_m
 
   ntotal = round(Int64, total/h)
   syn = zeros(N) #synapse
+  sample_id = 800
+  sample_row = 100 # from CSR
+  syn_id = 0.
+  sid_store = zeros(ntotal)
   # syn_e = zeros(N) #for measuring just excitatory synapses
   # syn_i = zeros(N) #for measuring just inhibitory synapses
   A = zeros(N) #adaptation
@@ -116,11 +120,13 @@ function euler_lif_CSR(h, total, Ne, W, CSR, s1, s2, w2, input_width, vth, tau_m
       incoming = drive .+ (h .* syn) .- (h .* A .* g_a)
       # Input[:, iter] = incoming
       V .+= incoming .- (V .* m_leak)
+      sid_store[iter] = syn_id*h
 
       # E_input[:,iter] = drive .+ (h .* syn_e)
       # I_input[:,iter] = (h .* syn_i) .- (A .* g_a)
 
       syn .-= (syn .* s_leak)
+      syn_id -= (syn_id * s_leak)
       # syn_e .-= (syn_e .* s_leak)
       # syn_i .-= (syn_i .* s_leak)
       A .-= A*a_leak
@@ -146,6 +152,9 @@ function euler_lif_CSR(h, total, Ne, W, CSR, s1, s2, w2, input_width, vth, tau_m
           # else
             # syn_i[CSR[js]] .+= W[CSR[js], js] .* lx
           end
+          if js == sample_id
+              syn_id += W[CSR[js][sample_row], js]# .* lx
+          end
         end
       end
 
@@ -155,5 +164,5 @@ function euler_lif_CSR(h, total, Ne, W, CSR, s1, s2, w2, input_width, vth, tau_m
     end
 
     # return time, raster, Input, adapt, E_input, I_input, V_store
-    return time, raster#, Input
+    return time, raster, sid_store#, Input
   end

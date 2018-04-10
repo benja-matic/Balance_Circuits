@@ -63,7 +63,7 @@ s2 = s_strength
 
 min_e_neurons = 20
 min_i_neurons = 50
-runtime = 100000 #ms
+runtime = 20000 #ms
 h = .1
 ntotal = round(runtime/h) #time points
 fbinsize = 400/h
@@ -97,11 +97,14 @@ input_width = .15 #units of k
 
 W = Weights(Ne,Ni,kee,kei,kie,kii,Aee,Aei,Aie,Aii,p)
 CSR = sparse_rep(W, N)
-@time t, r = euler_lif_CSR(h, runtime, Ne, W, CSR, s1, s2, w2, input_width, vth, tau_m, tau_s, tau_a, g_a, ang)
+@time t, r, sid_store = euler_lif_CSR(h, runtime, Ne, W, CSR, s1, s2, w2, input_width, vth, tau_m, tau_s, tau_a, g_a, ang)
 
 em = find(r .<= Ne)
 re = r[em]
 te = t[em]
+
+rehz = [length(find(re .== i))/20. for i = 1:Ne]
+rihz = [length(find(r .== i))/20. for i = Ne+1:N]
 
 ntd, nts = nt_diff_H(te, re, ntotal, half_e, netd_binsize)
 s = ntd ./ nts #signal for dominances

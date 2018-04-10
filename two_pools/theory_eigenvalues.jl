@@ -82,35 +82,35 @@ function single_neuron_noise(tau, vth, S, runtime, h)
 end
 
 
-# runtime = 100000. # ms
-# rts = runtime/1000. # s
-# SS = linspace(1., 5., 500)
-# ER = []
-# DR = []
-# NR = []
-# for i in SS
-#   nspikesd = (runtime/firing_period(20., 20., i))/rts
-#   push!(DR, nspikesd)
-# end
-#
-# SS2 = linspace(0., 5., 500)
-#
-# for i in SS2
-#   spikesn = single_neuron_noise(20., 20., i, runtime, 0.1)
-#   nspikesn = length(spikesn)/rts
-#   spikes = single_neuron(20., 20., i, runtime, 0.1)
-#   nspikese = length(spikes)/rts
-#   push!(ER, nspikese)
-#   push!(NR, nspikesn)
-# end
-#
-# plot(SS2, ER, ".", label = "Simulation, Constant Input")
-# plot(SS, DR, ".", alpha = .5, label = "Analytical, Constant Input")
-# plot(SS2, NR, ".", label = "Simulation, Noisy")
-# legend()
-# xlabel("S (mV/ms)")
-# ylabel("Firing rate (Hz)")
-# title("Single Neuron FI Curve with Constant and Noisy Input")
+runtime = 100000. # ms
+rts = runtime/1000. # s
+SS = linspace(1., 5., 500)
+ER = []
+DR = []
+NR = []
+for i in SS
+  nspikesd = (runtime/firing_period(20., 20., i))/rts
+  push!(DR, nspikesd)
+end
+
+SS2 = linspace(0., 5., 500)
+
+for i in SS2
+  spikesn = single_neuron_noise(20., 20., i, runtime, 0.1)
+  nspikesn = length(spikesn)/rts
+  spikes = single_neuron(20., 20., i, runtime, 0.1)
+  nspikese = length(spikes)/rts
+  push!(ER, nspikese)
+  push!(NR, nspikesn)
+end
+
+plot(SS2, ER, ".", label = "Simulation, Constant Input")
+plot(SS, DR, ".", alpha = .5, label = "Analytical, Constant Input")
+plot(SS2, NR, ".", label = "Simulation, Noisy")
+legend()
+xlabel("S (mV/ms)")
+ylabel("Firing rate (Hz)")
+title("Single Neuron FI Curve with Constant and Noisy Input")
 
 N = 100
 
@@ -119,8 +119,8 @@ WEI_1 = ones(N)*1.
 WIE_1 = ones(N)*1.
 WIEL_1 = linspace(0, 1., N)
 WII_1 = ones(N)*1.
-ge = 8.
-gi = 8.
+ge = 2.
+gi = 2.
 
 b1 = get_b_g(WEE_1, WII_1, ge, gi)
 c1 = get_c_g(WEE_1, WEI_1, WIE_1, WII_1, ge, gi)
@@ -142,3 +142,11 @@ legend()
 xlabel("WIE LONG")
 title("Theoretical Eigenvalues, Components")
 # theory_eig1 = theory_pos_eigV(b1, c1, d1)
+
+
+
+
+
+for i = 100:400
+  yd[i-99] = ER[end] - ER[i]
+  xd[i-99] = SS2[end] - SS2[i]

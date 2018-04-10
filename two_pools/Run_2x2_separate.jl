@@ -12,23 +12,25 @@ ICV = []
 
 # Aie = [700, 800, 900, 1000]
 # for i in Aie
-Aee = 100.
-Aei = 300.
-Aie = 700.
-Aii = 400.
+Aee = 10.
+Aei = 30.
+Aie = 70.
+Aii = 40.
 
 #Aie = [200, 400, 600, 800, 1000]
 #
-NNNN = [2000, 4000, 8000, 16000]
-# N = 2000
-for N in NNNN
+# NNNN = [2000, 4000, 8000, 16000]
+# # N = 2000
+# for N in NNNN
+N = 16000
 IFRAC = 2.
 Ni = Int64(round(N/IFRAC))
 Ne = N - Ni
 
 s_strength = 3.08
-p = 0.1
-p0 = sqrt(2000)*p/sqrt(N)
+# p = 0.1
+# p0 = sqrt(2000)*p/sqrt(N)
+k = 800
 
 # sn = sqrt(N)
 # Aee *= sn
@@ -51,7 +53,7 @@ netd_binsize = 50/h
 end_trans = 0.
 rt = ((ntotal - end_trans)/1000.)*h
 
-W = local_random_2x2(N, IFRAC, p, Aee, Aei, Aie, Aii);
+W = local_random_2x2(N, IFRAC, k, Aee, Aei, Aie, Aii);
 # CSR = sparse_rep(W, N);
 
 @time te, re, ti, ri, SEE, SEI, SIE, SII = euler_lif_2x2_s(h, runtime, N, IFRAC, W, s_strength, vth, tau_m, tau_s)
@@ -83,7 +85,7 @@ push!(RIS, MIR)
 push!(ECV, mean(CV_E))
 push!(ICV, mean(CV_I))
 
-end
+# end
 
 # Aie = [700, 800, 900, 1000]
 

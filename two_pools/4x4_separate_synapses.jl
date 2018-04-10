@@ -9,21 +9,32 @@ function top_hat_dist(N_in, width, A, p, circ)
   return circshift(incoming, circ-nc2)
 end
 
-function homogenous_4x4_weights(N, IFRAC, p, Aee, Aei, Aie, Aie_NL, Aii)
+#k is a fixed number of inputs for a local circuit
+#
+function homogenous_4x4_weights(N, IFRAC, k, Aee, Aei, Aie, Aie_NL, Aii)
 
   N_local = Int64(round(N/2)) #divide the network into two EI circuits
   Ni_local = Int64(round(N_local/IFRAC))
   Ne_local = Int64(N_local-Ni_local)
   Ne2 = Ne_local*2
-  ke_local = round(Int64, Ne_local*p)
-  ki_local = round(Int64, Ni_local*p)
-  kie = round(Int64, Ne_local*(p/2)) #half from your local circuit, half from the other local circuit
+  ks = sqrt(k)
+  ke = k
+  ki = k
+  ke_local = round(Int64, k)
+  ki_local = round(Int64, k)
+  kie = round(Int64, k/2) #half from your local circuit, half from the other local circuit
 
-  Jee = Aee/ke_local
-  Jei = -Aei/ki_local
-  Jie = Aie/kie
-  Jie_NL = Aie_NL/kie
-  Jii = -Aii/ki_local
+  Jee = Aee/ks
+  Jei = -Aei/ks
+  Jie = Aie/ks
+  Jie_NL = Aie_NL/ks
+  Jii = -Aii/ks
+
+  # Jee = Aee/ke_local
+  # Jei = -Aei/ki_local
+  # Jie = Aie/kie
+  # Jie_NL = Aie_NL/kie
+  # Jii = -Aii/ki_local
 
   W = zeros(N,N)
 
@@ -116,6 +127,7 @@ function euler_lif_CSR_4x4_s(h, total, N, IFRAC, W, CSR, s, vth, tau_m, tau_s, t
   Ne2 = NeL*2
   Ni2 = NiL*2
   drive = zeros(Ne2) .+ s*h
+  # drive[1:NeL] .+= s*h
 
   ntotal = round(Int64, total/h)
   #Voltage

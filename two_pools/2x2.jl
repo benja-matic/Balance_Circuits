@@ -2,13 +2,14 @@ function local_random_2x2(N, IFRAC, p, Aee, Aei, Aie, Aii)
 
   Ni = Int64(round(N/IFRAC))
   Ne = N - Ni
-  ke = round(Int64, Ne*p)
-  ki = round(Int64, Ni*p)
+  ks = sqrt(k)
+  ke = k
+  ki = k
 
-  Jee = Aee/ke
-  Jei = -Aei/ki
-  Jie = Aie/ke
-  Jii = -Aii/ki
+  Jee = Aee/ks
+  Jei = -Aei/ks
+  Jie = Aie/ks
+  Jii = -Aii/ks
 
   W1 = zeros(N,N)
   for i = 1:Ne

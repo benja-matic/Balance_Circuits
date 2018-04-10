@@ -1158,12 +1158,46 @@ function sim_2_theory(SEE, SEI, SIE, SIEL, SII, fe, fi, cth, re1, re2, ri1, ri2,
     return WEE_1, WEE_2, WIE_1, WIE_2, WIEL_1, WIEL_2, WEI_1, WEI_2, WII_1, WII_2, FE, FI
 end
 
+function estimate_I(SEE, SEI, SIE, SIEL, SII, s_strength, n)
+
+  n0 = div(n, 2)
+  sE1 = zeros(n0)
+  sE2 = zeros(n0)
+  sI1 = zeros(n0)
+  sI2 = zeros(n0)
+
+  for i = 1:n0
+      sE1[i] = mean(SEE[i,:][:] .+ SEI[i,:][:] .+ s_strength)
+      sE2[i] = mean(SEE[i+n0,:][:] .+ SEI[i+n0,:][:] .+ s_strength)
+      sI1[i] = mean(SIE[i,:][:] .+ SIEL[i,:][:] .+ SII[i,:][:])
+      sI2[i] = mean(SIE[i+n0,:][:] .+ SIEL[i+n0,:][:] .+ SII[i+n0,:][:])
+  end
+
+  sE1m = mean(sE1)
+  sE2m = mean(sE2)
+  sI1m = mean(sI1)
+  sI2m = mean(sI2)
+
+  return sE1m, sE2m, sI1m, sI2m
+end
+
+function estimated_gtiX(I)
+  return (I-.6)*.05
+end
+
+function estimated_gti(I)
+  return I*.05
+end
+
 function theory_rates(WEE_1, WEE_2, WIE_1, WIE_2, WIEL_1, WIEL_2, WEI_1, WEI_2, WII_1, WII_2, FE, FI)
 
   RE1 = ((WII_1*FE) - (WEI_1*FI))/(((WEI_1*(WIE_1+WIEL_1))-(WII_1*WEE_1)))
   RI1 = ((FE*(WIE_1+WIEL_1))-(WEE_1*FI))/(((WEI_1*(WIE_1+WIEL_1))-(WII_1*WEE_1)))
 
-  return RE1, RI1
+  RE2 = ((WII_2*FE) - (WEI_2*FI))/(((WEI_2*(WIE_2+WIEL_2))-(WII_2*WEE_2)))
+  RI2 = ((FE*(WIE_2+WIEL_2))-(WEE_2*FI))/(((WEI_2*(WIE_2+WIEL_2))-(WII_2*WEE_2)))
+
+  return RE1, RI1, RE2, RI2
 end
 
 function sim_2_theory_2x2(SEE, SEI, SIE, SII, fe, fi, cth, re1, ri1, n)
@@ -1197,4 +1231,87 @@ function theory_rates_2x2(WEE_1, WIE_1, WEI_1, WII_1, FE, FI)
   RI1 = ((WIE_1*FE) - (WEE_1*FI))/((WEI_1*WIE_1)-(WII_1*WEE_1))
 
   return RE1, RI1
+end
+
+function theory_pos_eigV(b, c, d)
+  return b + sqrt(c+d)
+end
+
+#renormalized gain function values, which are W coefficients, set to 1 for now
+
+function get_b(wee, wii)
+  p = (wee .- wii .- 2)
+  return p./2.
+end
+
+function get_c(wee, wei, wie, wii)
+  p1 = (wii .+ wee) .^ 2.
+  p2 = wei .* wie .* 4.
+  return p1 .- p2
+end
+
+function get_d(wei, wieL)
+  return 4. .* wei .* wieL
+end
+
+#renormalized gain function values, which are W coefficients, are free parameters
+
+function get_b_g(wee, wii, ge, gi)
+  p = ((ge*wee) .- (gi*wii) .- 2)
+  return p./2.
+end
+
+function get_c_g(wee, wei, wie, wii, ge, gi)
+  p1 = ((gi*wii) .+ (ge*wee)) .^ 2.
+  p2 = wei .* wie .* 4. .* ge .* gi
+  return p1 .- p2
+end
+
+function get_d_g(wei, wieL, ge, gi)
+  return 4. .* wei .* wieL .* ge .* gi
+end
+
+function FI_G(S, vth, tau)
+  denom = tau*log((S-(vth/tau))/S)
+  return -1/denom
+end
+
+function firing_period(tau, vth, S)
+  return -tau*log(1-(vth/(tau*S)))
+end
+
+function single_neuron(tau, vth, S, runtime, h)
+  v0 = randn()*vth
+  ntotal = Int64(div(runtime, h))
+  v = v0
+  m_leak = h/tau
+  spikes = []
+  for i = 1:ntotal
+    v += (S*h) - (v * m_leak)
+    if v > vth
+      push!(spikes, i)
+      v -= vth
+    end
+  end
+  return spikes
+end
+
+function single_neuron_noise(tau, vth, S, runtime, h)
+  v0 = randn()*vth
+  ntotal = Int64(div(runtime, h))
+  v = v0
+  m_leak = h/tau
+  spikes = []
+  sh = sqrt(h)
+  sigma = sqrt(S)
+  ssh = sh*sigma
+  eta = (randn(ntotal)*ssh) + S*h
+  for i = 1:ntotal
+    v = v - (v*m_leak) + eta[i]
+    if v > vth
+      push!(spikes, i)
+      v -= vth
+    end
+  end
+  return spikes
 end
