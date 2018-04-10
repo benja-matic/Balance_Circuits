@@ -1182,7 +1182,12 @@ function estimate_I(SEE, SEI, SIE, SIEL, SII, s_strength, n)
 end
 
 function estimated_gtiX(I)
-  return (I-.6)*.05
+  p = (I-.6)*.05
+  if p < 0
+    return 0
+  else
+    return p
+  end
 end
 
 function estimated_gti(I)

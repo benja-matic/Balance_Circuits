@@ -38,11 +38,11 @@ d2L = []
 # for i in Aie_NL
 # Aie_NLS = [0, 20, 40, 60, 80, 100]
 # for i in Aie_NLS
-Aee = 10.
+Aee = 0.
 Aei = 30.
 Aie = 70.
-Aie_NL = 20.
-Aii = 40.
+Aie_NL = 0.
+Aii = 20.
 
 #Aie = [200, 400, 600, 800, 1000]
 
@@ -126,14 +126,14 @@ gti_e2 = estimated_gtiX(Input_E2)
 gti_i1 = estimated_gtiX(Input_I1)
 gti_i2 = estimated_gtiX(Input_I2)
 
-b1 = get_b_g(WEE_1, WII_1, gti_e1, gti_i1)
-b2 = get_b_g(WEE_2, WII_2, gti_e2, gti_i2)
+b1 = get_b_g(abs(WEE_1), abs(WII_1), gti_e1, gti_i1)
+b2 = get_b_g(abs(WEE_2), abs(WII_2), gti_e2, gti_i2)
 
-c1 = get_c_g(WEE_1, WEI_1, WIE_1, WII_1, gti_e1, gti_i1)
-c2 = get_c_g(WEE_2, WEI_2, WIE_2, WII_2, gti_e2, gti_i2)
+c1 = get_c_g(abs(WEE_1), abs(WEI_1), abs(WIE_1), abs(WII_1), gti_e1, gti_i1)
+c2 = get_c_g(abs(WEE_2), abs(WEI_2), abs(WIE_2), abs(WII_2), gti_e2, gti_i2)
 
-d1 = get_d_g(WEI_1, WIEL_1, gti_e1, gti_i1)
-d2 = get_d_g(WEI_2, WIEL_2, gti_e2, gti_i2)
+d1 = get_d_g(abs(WEI_1), abs(WIEL_1), gti_e1, gti_i1)
+d2 = get_d_g(abs(WEI_2), abs(WIEL_2), gti_e2, gti_i2)
 
 push!(ERT1, RE1_THEORY)
 push!(ERT2, RE2_THEORY)
