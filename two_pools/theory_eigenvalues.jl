@@ -109,95 +109,99 @@ function estimated_gtiX(I)
   end
 end
 
-runtime = 100000. # ms
-rts = runtime/1000. # s
-# SS = linspace(1., 2., 50)
-# ER = []
-# DR = []
-# NR = []
-# NRS = zeros(6, 100)
-# for i in SS
-#   nspikesd = (runtime/firing_period(20., 20., i))/rts
-#   push!(DR, nspikesd)
+# runtime = 100000. # ms
+# rts = runtime/1000. # s
+# # SS = linspace(1., 2., 50)
+# # ER = []
+# # DR = []
+# # NR = []
+# # NRS = zeros(6, 100)
+# # for i in SS
+# #   nspikesd = (runtime/firing_period(20., 20., i))/rts
+# #   push!(DR, nspikesd)
+# # end
+#
+# SS2 = linspace(-.3, .4, 100)
+# e1std = (2.13*(SS2 .^2.)) + (-1.7*SS2) + 1.83
+# i1std = (-.064*(SS2 .^2.)) + (-1.34*SS2) + 1.51
+#
+# EZ = []
+# IZ = []
+#
+# SD = [.5, 1., 1.5, 2., 2.5, 3.]
+# for i in eachindex(SS2)
+#   spikesnE = single_neuron_noise_v(20., 20., SS2[i], e1std[i], runtime, 0.1)
+#   spikesnI = single_neuron_noise_v(20., 20., SS2[i], i1std[i], runtime, 0.1)
+#   nspikesnE = length(spikesnE)/rts
+#   nspikesnI = length(spikesnI)/rts
+#   push!(EZ, nspikesnE)
+#   push!(IZ, nspikesnI)
+#
+#   # spikesn = single_neuron_noise(20., 20., i, runtime, 0.1)
+#   # nspikesn = length(spikesn)/rts
+#   # spikes = single_neuron(20., 20., i, runtime, 0.1)
+#   # nspikese = length(spikes)/rts
+#   # push!(ER, nspikese)
+#   # push!(NR, nspikesn)
+#   # for j in eachindex(SD)
+#   #   spikesn = single_neuron_noise_v(20., 20., SS2[i], SD[j], runtime, 0.1)
+#   #   nspikesn = length(spikesn)/rts
+#   #   NRS[j, i] = nspikesn
+#   # end
 # end
-
-SS2 = linspace(-.3, .4, 100)
-e1std = (2.13*(SS2 .^2.)) + (-1.7*SS2) + 1.83
-i1std = (-.064*(SS2 .^2.)) + (-1.34*SS2) + 1.51
-
-EZ = []
-IZ = []
-
-SD = [.5, 1., 1.5, 2., 2.5, 3.]
-for i in eachindex(SS2)
-  spikesnE = single_neuron_noise_v(20., 20., SS2[i], e1std[i], runtime, 0.1)
-  spikesnI = single_neuron_noise_v(20., 20., SS2[i], i1std[i], runtime, 0.1)
-  nspikesnE = length(spikesnE)/rts
-  nspikesnI = length(spikesnI)/rts
-  push!(EZ, nspikesnE)
-  push!(IZ, nspikesnI)
-
-  # spikesn = single_neuron_noise(20., 20., i, runtime, 0.1)
-  # nspikesn = length(spikesn)/rts
-  # spikes = single_neuron(20., 20., i, runtime, 0.1)
-  # nspikese = length(spikes)/rts
-  # push!(ER, nspikese)
-  # push!(NR, nspikesn)
-  # for j in eachindex(SD)
-  #   spikesn = single_neuron_noise_v(20., 20., SS2[i], SD[j], runtime, 0.1)
-  #   nspikesn = length(spikesn)/rts
-  #   NRS[j, i] = nspikesn
-  # end
-end
-
-SS2M = [estimated_gtiX(i) for i in SS2]
-
-# plot(SS2, ER, ".", label = "Simulation, Constant Input")
-# plot(SS, DR, ".", alpha = .5, label = "Analytical, Constant Input")
-# plot(SS2, NR, ".", label = "Simulation, Noisy")
-# plot(SS2, SS2M, ".", label = "Model g~'")
-# for i = 1:6
-#   plot(SS2, NRS[i,:][:], ".", label = "Sigma=$(SD[i])")
-# end
-plot(SS2, EZ, ".", label = "Excitatory")
-plot(SS2, IZ, ".", label = "Inhibitory")
-legend()
-xlabel("S (mV/ms)")
-ylabel("Firing rate (Hz)")
-title("Single Neuron FI Curve with Constant and Noisy Input")
-
-# N = 100
 #
-# WEE_1 = ones(N)*1.
-# WEI_1 = ones(N)*1.
-# WIE_1 = ones(N)*1.
-# WIEL_1 = linspace(0, 1., N)
-# WII_1 = ones(N)*1.
-# ge = 2.
-# gi = 2.
+# SS2M = [estimated_gtiX(i) for i in SS2]
 #
-# b1 = get_b_g(WEE_1, WII_1, ge, gi)
-# c1 = get_c_g(WEE_1, WEI_1, WIE_1, WII_1, ge, gi)
-# d1 = get_d_g(WEI_1, WIEL_1, ge, gi)
-#
-# eig1 = b1 + sqrt(c1+d1)
-# eig2 = b1 + sqrt(c1-d1)
-# eig3 = b1 - sqrt(c1+d1)
-# eig4 = b1 - sqrt(c1-d1)
-# figure(2)
+# # plot(SS2, ER, ".", label = "Simulation, Constant Input")
+# # plot(SS, DR, ".", alpha = .5, label = "Analytical, Constant Input")
+# # plot(SS2, NR, ".", label = "Simulation, Noisy")
+# # plot(SS2, SS2M, ".", label = "Model g~'")
+# # for i = 1:6
+# #   plot(SS2, NRS[i,:][:], ".", label = "Sigma=$(SD[i])")
+# # end
+# plot(SS2, EZ, ".", label = "Excitatory")
+# plot(SS2, IZ, ".", label = "Inhibitory")
+# legend()
+# xlabel("S (mV/ms)")
+# ylabel("Firing rate (Hz)")
+# title("Single Neuron FI Curve with Constant and Noisy Input")
+
+N = 100
+
+WEE_1 = ones(N)*.27
+WEI_1 = ones(N)*2.2
+WIE_1 = ones(N)*1.9
+WIEL_1 = linspace(0, 10.5, N)
+WII_1 = ones(N)*1.1
+ge = .15
+gi = -.1
+
+b1 = get_b_g(WEE_1, WII_1, ge, gi)
+c1 = get_c_g(WEE_1, WEI_1, WIE_1, WII_1, ge, gi)
+d1 = get_d_g(WEI_1, WIEL_1, ge, gi)
+
+eig1 = b1 + sqrt(complex(c1+d1))
+eig2 = b1 + sqrt(complex(c1-d1))
+eig3 = b1 - sqrt(complex(c1+d1))
+eig4 = b1 - sqrt(complex(c1-d1))
+figure(2)
 # plot(WIEL_1, b1, label = "b")
 # plot(WIEL_1, c1, label = "c")
 # plot(WIEL_1, d1, label = "d")
-# plot(WIEL_1, eig1, label = "b + sqrt(c+d)")
-# # plot(WIEL_1, eig2, label = "b + sqrt(c-d)")
-# # plot(WIEL_1, eig3, label = "b - sqrt(c+d)")
-# # plot(WIEL_1, eig4, label = "b - sqrt(c-d)")
-# legend()
-# xlabel("WIE LONG")
-# title("Theoretical Eigenvalues, Components")
-# # theory_eig1 = theory_pos_eigV(b1, c1, d1)
-#
-#
+plot(WIEL_1, eig1, label = "b + sqrt(c+d)")
+plot(WIEL_1, eig2, label = "b + sqrt(c-d)")
+plot(WIEL_1, eig3, label = "b - sqrt(c+d)")
+plot(WIEL_1, eig4, label = "b - sqrt(c-d)")
+
+# plot(WIEL_1, eig2, label = "b + sqrt(c-d)")
+# plot(WIEL_1, eig3, label = "b - sqrt(c+d)")
+# plot(WIEL_1, eig4, label = "b - sqrt(c-d)")
+legend()
+xlabel("WIE LONG")
+title("Theoretical Eigenvalues, Components")
+# theory_eig1 = theory_pos_eigV(b1, c1, d1)
+
+
 #
 # yd = zeros(301)
 # xd = zeros(301)

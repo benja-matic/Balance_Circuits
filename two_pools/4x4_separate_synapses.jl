@@ -119,14 +119,15 @@ function interpolate_spike(v2, v1, vth)
   return t
 end
 
-function euler_lif_CSR_4x4_s(h, total, N, IFRAC, W, CSR, s, vth, tau_m, tau_s, tau_a, g_a)
+function euler_lif_CSR_4x4_s(h, total, N, IFRAC, W, CSR, fe, fi, vth, tau_m, tau_s, tau_a, g_a)
 
   N2 = Int64(round(N/2)) #divide the network into two EI circuits
   NiL = Int64(round(N2/IFRAC))
   NeL = Int64(N2-NiL)
   Ne2 = NeL*2
   Ni2 = NiL*2
-  drive = zeros(Ne2) .+ s*h
+  drive = zeros(Ne2) .+ fe*h
+  drivi = zeros(Ni2) .+ fi*h
   # drive[1:NeL] .+= s*h
 
   ntotal = round(Int64, total/h)
@@ -168,7 +169,7 @@ function euler_lif_CSR_4x4_s(h, total, N, IFRAC, W, CSR, s, vth, tau_m, tau_s, t
   for iter = 1:ntotal
 
       Ve .+= drive .+ h*syn_ee .+ h*syn_ei .- (Ae*g_a) .- (Ve*m_leak)
-      Vi .+= h*syn_ie .+ h*syn_ieL .+ h*syn_ii .- (Vi*m_leak)
+      Vi .+= drivi .+ h*syn_ie .+ h*syn_ieL .+ h*syn_ii .- (Vi*m_leak)
       #Store synaptic inputs
       SEE[1:50,iter] = syn_ee[1:50]#*h
       SEE[51:100, iter] = syn_ee[NeL+1:NeL+50]#*h
