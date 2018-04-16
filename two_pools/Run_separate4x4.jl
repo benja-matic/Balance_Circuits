@@ -19,20 +19,28 @@ c1L = []
 c2L = []
 d1L = []
 d2L = []
-WEE = []
-WEI = []
-WIE = []
-WIEL = []
-WII = []
+WEE1 = []
+WEI1 = []
+WIE1 = []
+WIEL1 = []
+WII1 = []
+WEE2 = []
+WEI2 = []
+WIE2 = []
+WIEL2 = []
+WII2 = []
 REX1 = []
 RIX1 = []
 REX2 = []
 RIX2 = []
 
-E1std = []
-I1std = []
+SL1 = []
+SL2 = []
+
 E1mn = []
 I1mn = []
+E2mn = []
+I2mn = []
 
 # ECV1 = []
 # ECV2 = []
@@ -58,7 +66,9 @@ I1mn = []
 # Ss = [-.5, -.25, 0., 0.25, 0.5]
 # # Ss = [2.8, 2.9, 3., 3.1, 3.2]
 # for i in Ss
-Aie_NLS = [0, 20, 40, 60, 65, 70, 75, 80]
+Aie_NLS = linspace(0,80,30)
+# Aie_NLS = [0, 10, 20, 30, 40, 50, 60, 65, 70, 75, 80]
+# Aie_NLS = [71.5, 71.75, 72., 72.25, 72.5, 72.75, 73, 73.25, 73.5, 73.75, 74, 74.25, 74.5, 74.75, 75]
 for i in Aie_NLS
 Aee = 5.
 Aei = 40.
@@ -94,7 +104,7 @@ g_a = 0
 
 min_e_neurons = 20
 min_i_neurons = 50
-runtime = 5000 #ms
+runtime = 10000 #ms
 h = .1
 ntotal = round(runtime/h) #time points
 fbinsize = 400/h
@@ -137,11 +147,17 @@ println("##RESULT $(wta_ness), $(bias), $(mean(E_R_bot)), $(mean(E_R_top)), $(me
 
 WEE_1, WEE_2, WIE_1, WIE_2, WIEL_1, WIEL_2, WEI_1, WEI_2, WII_1, WII_2, FE, FI = sim_2_theory(SEE, SEI, SIE, SIEL, SII, fe, fi, 1., MER1, MER2, MIR1, MIR2, 100)
 
-push!(WEE, WEE_1)
-push!(WEI, WEI_1)
-push!(WIE, WIE_1)
-push!(WIEL, WIEL_1)
-push!(WII, WII_1)
+push!(WEE1, WEE_1)
+push!(WEI1, WEI_1)
+push!(WIE1, WIE_1)
+push!(WIEL1, WIEL_1)
+push!(WII1, WII_1)
+
+push!(WEE2, WEE_2)
+push!(WEI2, WEI_2)
+push!(WIE2, WIE_2)
+push!(WIEL2, WIEL_2)
+push!(WII2, WII_2)
 
 println("##PARAMETERS $(WEE_1), $(WEE_2), $(WIE_1), $(WIE_2), $(WIEL_1), $(WIEL_2), $(WEI_1), $(WEI_2), $(WII_1), $(WII_2), $(FE), $(FI)")
 
@@ -151,24 +167,37 @@ RE1_THEORY, RI1_THEORY, RE2_THEORY, RI2_THEORY = theory_rates(abs(WEE_1), abs(WE
 
 Input_E1, Input_E2, Input_I1, Input_I2 = estimate_I(SEE, SEI, SIE, SIEL, SII, s_strength, 100) ###needs to be adjusted for when we add feedforward input to the inhibitory neurons
 
-sEm = zeros(100)
-sIm = zeros(100)
-sEs = zeros(100)
-sIs = zeros(100)
+sEm1 = zeros(50)
+sIm1 = zeros(50)
+sEm2 = zeros(50)
+sIm2 = zeros(50)
 
-for i = 1:100
-    es_ = SEE[i,:][:] .+ SEI[i,:][:] .+ s_strength
-    is_ = SIE[i,:][:] .+ SIEL[i,:][:] .+ SII[i,:][:]
-    sEm[i] = mean(es_)
-    sEs[i] = std(es_)
-    sIm[i] = mean(is_)
-    sIs[i] = std(is_)
+for i = 1:50
+    es1_ = SEE[i,:][:] .+ SEI[i,:][:] .+ s_strength
+    is1_ = SIE[i,:][:] .+ SIEL[i,:][:] .+ SII[i,:][:]
+    es2_ = SEE[i+50,:][:] .+ SEI[i+50,:][:] .+ s_strength
+    is2_ = SIE[i+50,:][:] .+ SIEL[i+50,:][:] .+ SII[i+50,:][:]
+    sEm1[i] = mean(es1_)
+    sIm1[i] = mean(is1_)
+    sEm2[i] = mean(es2_)
+    sIm2[i] = mean(is2_)
 end
 
-push!(E1std, mean(sEs))
-push!(E1mn, mean(sEm))
-push!(I1std, mean(sIs))
-push!(I1mn, mean(sIm))
+seL1 = zeros(50)
+seL2 = zeros(50)
+
+for i = 1:50
+ seL1[i] = mean(SIEL[i,:][:])
+ seL2[i] = mean(SIEL[i+50,:][:])
+end
+
+push!(SL1, mean(seL1))
+push!(SL2, mean(seL2))
+
+push!(E1mn, mean(sEm1))
+push!(I1mn, mean(sIm1))
+push!(E2mn, mean(sEm2))
+push!(I2mn, mean(sIm2))
 
 gti_e1 = estimated_gtiX(Input_E1)
 gti_e2 = estimated_gtiX(Input_E2)
@@ -207,6 +236,8 @@ push!(REX1, rex1)
 push!(REX2, rex2)
 push!(RIX1, rix1)
 push!(RIX2, rix2)
+
+push!(wta, wta_ness)
 
 # if wta_ness > .8
 #     rex, rix = theory_rates_2x2(abs(WEE_1), abs(WIE_1), abs(WEI_1), abs(WII_1), FE, FI)
@@ -328,34 +359,34 @@ end
 # end
 
 # FEz = [i-1. for i in Ss]
-FIz = [i-1. for i in Ss]
+# FIz = [i-1. for i in Ss]
+#
+#
+# plot(FIz, ERS1, ".", label = "pool 1")
+# plot(FIz, ERS2, ".", label = "pool 2")
+# xlabel("FI")
+# ylabel("rate (Hz)")
+# title("Finding g~': Inhibitory Neurons")
+# legend()
 
 
-plot(FIz, ERS1, ".", label = "pool 1")
-plot(FIz, ERS2, ".", label = "pool 2")
-xlabel("FI")
-ylabel("rate (Hz)")
-title("Finding g~': Inhibitory Neurons")
-legend()
 
 
 
-
-
-plot(Aie_NLS, ERS1, "b", ms = 15., label = "Sim, Pool E1")
-plot(Aie_NLS, ERS2, "r", ms = 15., label = "Sim, Pool E2")
-plot(Aie_NLS, REX1, "b|", ms = 15., label = "2x2 theory, Pool E1")
-plot(Aie_NLS, REX2, "r|", ms = 15., label = "2x2 theory, Pool E2")
-plot(Aie_NLS, ERT1, "b_", ms = 15., label = "4x4 theory, Pool E1")
-plot(Aie_NLS, ERT2, "r_", ms = 15., label = "4x4 theory, Pool E2")
-
-LR1 = WIEL .* ERS1
-LR2 = WIEL .* ERS2
-
-EX1 = []
-IX1 = []
-EX2 = []
-IX2 = []
+# plot(Aie_NLS, ERS1, "b", ms = 15., label = "Sim, Pool E1")
+# plot(Aie_NLS, ERS2, "r", ms = 15., label = "Sim, Pool E2")
+# plot(Aie_NLS, REX1, "b|", ms = 15., label = "2x2 theory, Pool E1")
+# plot(Aie_NLS, REX2, "r|", ms = 15., label = "2x2 theory, Pool E2")
+# plot(Aie_NLS, ERT1, "b_", ms = 15., label = "4x4 theory, Pool E1")
+# plot(Aie_NLS, ERT2, "r_", ms = 15., label = "4x4 theory, Pool E2")
+#
+# LR1 = WIEL .* ERS1
+# LR2 = WIEL .* ERS2
+#
+# EX1 = []
+# IX1 = []
+# EX2 = []
+# IX2 = []
 
 # for i = 1:length(LR1)
 #  ex1, ix1 = theory_rates_2x2(abs(WEE[1]), abs(WIE[1]), abs(WEI[1]), abs(WII[1]), FE, FI + LR1[i])
@@ -366,19 +397,320 @@ IX2 = []
 #  push!(IX2, ix2)
 # end
 
-LE1, LI1 = theory_rates_2x2(abs(WEE[1]), abs(WIE[1]), abs(WEI[1]), abs(WII[1]), FE, FI + LR2)
-LE2, LI2 = theory_rates_2x2(abs(WEE[1]), abs(WIE[1]), abs(WEI[1]), abs(WII[1]), FE, FI + LR1)
+# LE1, LI1 = theory_rates_2x2(abs(WEE[1]), abs(WIE[1]), abs(WEI[1]), abs(WII[1]), FE, FI + LR2)
+# LE2, LI2 = theory_rates_2x2(abs(WEE[1]), abs(WIE[1]), abs(WEI[1]), abs(WII[1]), FE, FI + LR1)
+#
+# plot(Aie_NLS, REX1, "b", alpha = 0.2, ms = 15., label = "Sim, Pool E1, no altered input")
+# plot(Aie_NLS, LE1, "b.", ms = 15., label = "2x2 theory, Pool E1, adjusted FI")
+# plot(Aie_NLS, LE2, "r.", ms = 15., label = "2x2 theory, Pool E2, adjusted FI")
+# plot(Aie_NLS, ERS1, "b+", ms = 15., label = "Sim, Pool E1")
+# plot(Aie_NLS, ERS2, "r+", ms = 15., label = "Sim, Pool E2")
+# plot(Aie_NLS, ERT1, "b_", ms = 15., label = "4x4 theory, Pool E1")
+# plot(Aie_NLS, ERT2, "r_", ms = 15., label = "4x4 theory, Pool E2")
+# legend()
+# xlabel("Aie_LONG")
+# ylabel("Rate (Hz)")
+# title("All predictions vs simulation")
+# rex1, rix1 = theory_rates_2x2(abs(WEE_1), abs(WIE_1), abs(WEI_1), abs(WII_1), FE, FI)
+# rex2, rix2 = theory_rates_2x2(abs(WEE_2), abs(WIE_2), abs(WEI_2), abs(WII_2), FE, FI)
 
-plot(Aie_NLS, REX1, "b", alpha = 0.2, ms = 15., label = "Sim, Pool E1, no altered input")
-plot(Aie_NLS, LE1, "b.", ms = 15., label = "2x2 theory, Pool E1, adjusted FI")
-plot(Aie_NLS, LE2, "r.", ms = 15., label = "2x2 theory, Pool E2, adjusted FI")
-plot(Aie_NLS, ERS1, "b+", ms = 15., label = "Sim, Pool E1")
-plot(Aie_NLS, ERS2, "r+", ms = 15., label = "Sim, Pool E2")
-plot(Aie_NLS, ERT1, "b_", ms = 15., label = "4x4 theory, Pool E1")
-plot(Aie_NLS, ERT2, "r_", ms = 15., label = "4x4 theory, Pool E2")
+# plot(E1mn, ERS1, ".", ms = 20., label = "Excitatory Pool 1")
+# plot(E2mn, ERS2, ".", ms = 20., label = "Excitatory Pool 2")
+# axvline(E1mn[8], linestyle = "dashed")
+# axvline(E2mn[8], linestyle = "dashed")
+# legend()
+# title("Mean Input vs. Firing Rate: Excitatory Cells")
+# ylabel("Mean Firing Rate (Hz)")
+# subplot(212, sharex = sp)
+# plot(I1mn, IRS1, ".", ms = 20., label = "Inhibitory Pool 1")
+# plot(I2mn, IRS2, ".", ms = 20., label = "Inhibitory Pool 2")
+# legend()
+# ylabel("Mean Firing Rate (Hz)")
+# xlabel("Mean Input (mV/ms)")
+# title("Mean Input vs. Firing Rate: Inhibitory Cells")
+#
+# big_shot = [max(ERS1[i], ERS2[i]) for i = 1:length(ERS1)]
+# lil_shot = [min(ERS1[i], ERS2[i]) for i = 1:length(ERS1)]
+#
+# big_one = zeros(length(ERS1))
+# lil_one = zeros(length(ERS1))
+#
+# for i = 1:length(ERS1)
+#  if ERS1[i] > ERS2[i]
+#   big_one[i] = 1
+#   lil_one[i] = 2
+#  else
+#   big_one[i] = 2
+#   lil_one[i] = 1
+#  end
+# end
+#
+# bolth = zeros(2, length(ERS1))
+# for i= 1:length(ERS1)
+#  bolth[1, i] = E1mn[i]
+#  bolth[2,i] = E2mn[i]
+# end
+#
+# big_input = zeros(length(ERS1))
+# lil_input = zeros(length(ERS1))
+# for i = 1:length(ERS1)
+#  big_input[i] = bolth[big_one[i], i]
+#  lil_input[i] = bolth[lil_one[i], i]
+# end
+#
+# plot(big_input, big_shot, ".", ms = 20., label = "more active pool")
+# plot(lil_input, lil_shot, ".", ms = 20., label = "less active pool")
+# axvline(big_input[8], linestyle = "dashed")
+# axvline(lil_input[8], linestyle = "dashed")
+#
+# xlabel("Mean Input")
+# legend()
+# ylabel("Firing Rate")
+# title("Mean Input vs. Firing Rate: Excitatory Cells")
+
+# plot(Aie_NLS, ERS1, ".", ms = 20., label = "Excitatory Pool 1")
+# plot(Aie_NLS, ERS2, ".", ms = 20., label = "Excitatory Pool 2")
+#
+# plot(Aie_NLS, IRS1, ".", ms = 20., label = "Inhibitory Pool 1")
+# plot(Aie_NLS, IRS2, ".", ms = 20., label = "Inhibitory Pool 2")
+#
+# plot(Aie_NLS, I1mn, ".", ms = 20., label = "Inhibitory Pool 1")
+# plot(Aie_NLS, I2mn, ".", ms = 20., label = "Inhibitory Pool 2")
+
+
+# LR1 = WIEL1 .* ERS1
+# LR2 = WIEL2 .* ERS2
+
+# plot(SL1, LR1)
+# plot(SL2, LR2)
+
+
+
+# LE1, LI1 = theory_rates_2x2(abs(WEE1[1]), abs(WIE1[1]), abs(WEI1[1]), abs(WII1[1]), FE, FI .+ LR2)
+# LE2, LI2 = theory_rates_2x2(abs(WEE2[1]), abs(WIE2[1]), abs(WEI2[1]), abs(WII2[1]), FE, FI .+ LR1)
+#
+# LE1, LI1 = theory_rates_2x2(abs(WEE1[1]), abs(WIE1[1]), abs(WEI1[1]), abs(WII1[1]), FE, FI .+ SL1)
+# LE2, LI2 = theory_rates_2x2(abs(WEE2[1]), abs(WIE2[1]), abs(WEI2[1]), abs(WII2[1]), FE, FI .+ SL2)
+# #
+# plot(Aie_NLS, REX1, "b", alpha = 0.2, ms = 15., label = "2x2 theory, Pool E1, no altered input")
+# plot(Aie_NLS, LE1, "b+", ms = 15., label = "2x2 theory, Pool E1, adjusted FI")
+# plot(Aie_NLS, LE2, "r+", ms = 15., label = "2x2 theory, Pool E2, adjusted FI")
+# plot(Aie_NLS, ERS1, "b.", ms = 15., label = "Sim, Pool E1")
+# plot(Aie_NLS, ERS2, "r.", ms = 15., label = "Sim, Pool E2")
+# plot(Aie_NLS, ERT1, "bx", ms = 15., label = "4x4 theory, Pool E1")
+# plot(Aie_NLS, ERT2, "rx", ms = 15., label = "4x4 theory, Pool E2")
+# legend(loc=2)
+# xlabel("Aie_LONG")
+# ylabel("Rate (Hz)")
+# title("All predictions vs simulation")
+# rex1, rix1 = theory_rates_2x2(abs(WEE_1), abs(WIE_1), abs(WEI_1), abs(WII_1), FE, FI)
+# rex2, rix2 = theory_rates_2x2(abs(WEE_2), abs(WIE_2), abs(WEI_2), abs(WII_2), FE, FI)
+
+# plot(Aie_NLS, IRS1, "b+", ms = 15., label = "Sim, Pool I1")
+# plot(Aie_NLS, IRS2, "r+", ms = 15., label = "Sim, Pool I2")
+# plot(Aie_NLS, LI1, "b.", ms = 15., label = "2x2 theory, Pool I1, adjusted FI")
+# plot(Aie_NLS, LI2, "r.", ms = 15., label = "2x2 theory, Pool I2, adjusted FI")
+# legend()
+# xlabel("Aie_LONG")
+# ylabel("Mean Firing Rate")
+# title("2x2 Theory vs. 4x4 Sim: Inhibitory Cells")
+# #
+#
+#
+#
+# plot(Aie_NLS, IRS1, "r+", ms = 15., label = "Sim, Pool I1")
+# # plot(Aie_NLS, IRS2, "m+", ms = 15., label = "Sim, Pool I2")
+# plot(Aie_NLS, ERS1, "b+", ms = 15., label = "Sim, Pool E1")
+# # plot(Aie_NLS, ERS2, "c+", ms = 15., label = "Sim, Pool E2")
+#
+# plot(Aie_NLS, LI1, "r.", ms = 15., label = "2x2 theory, Pool I1")
+# # plot(Aie_NLS, LI2, "m.", ms = 15., label = "2x2 theory, Pool I2")
+# plot(Aie_NLS, LE1, "b.", ms = 15., label = "2x2 theory, Pool E1")
+# # plot(Aie_NLS, LE2, "c.", ms = 15., label = "2x2 theory, Pool E2")
+# legend()
+
+
+# big_inh = zeros(length(ERS1))
+# big_exc = zeros(length(ERS1))
+# lil_inh = zeros(length(ERS1))
+# lil_exc = zeros(length(ERS1))
+# for i = 1:length(ERS1)
+#  if ERS1[i] > ERS2[i]
+#   big_inh[i] = IRS1[i]
+#   big_exc[i] = ERS1[i]
+#   lil_inh[i] = IRS2[i]
+#   lil_exc[i] = ERS2[i]
+#  else
+#   big_inh[i] = IRS2[i]
+#   big_exc[i] = ERS2[i]
+#   lil_inh[i] = IRS1[i]
+#   lil_exc[i] = ERS1[i]
+#  end
+# end
+#
+# plot(Aie_NLS, big_exc, ".", ms = 15., label = "E winner")
+# plot(Aie_NLS, lil_exc, ".", ms = 15., label = "E loser")
+# plot(Aie_NLS, big_inh, ".", ms = 15., label = "I winner")
+# plot(Aie_NLS, lil_inh, ".", ms = 15., label = "I loser")
+# legend()
+#
+#
+# SL_loser = [max(SL1[i], SL2[i]) for i = 1:length(ERS1)] #if you got more long range input, it's because you lose
+# SL_winner = [min(SL1[i], SL2[i]) for i = 1:length(ERS1)]
+#
+# LEL, LIL = theory_rates_2x2(abs(WEE1[1]), abs(WIE1[1]), abs(WEI1[1]), abs(WII1[1]), FE, FI .+ SL_loser)
+# LEW, LIW = theory_rates_2x2(abs(WEE2[1]), abs(WIE2[1]), abs(WEI2[1]), abs(WII2[1]), FE, FI .+ SL_winner)
+#
+# plot(Aie_NLS, LEW, ".", ms = 15., label = "2x2 E Winner")
+# plot(Aie_NLS, LIW, ".", ms = 15., label = "2x2 I Winner")
+# plot(Aie_NLS, big_exc, ".", ms = 15., label = "Sim E Winner")
+# plot(Aie_NLS, big_inh, ".", ms = 15., label = "Sim I Winner")
+# legend()
+#
+# #want to isolate inhibitory inputs in dominant circuit
+#
+# big_I = zeros(length(ERS1))
+# lil_I = zeros(length(ERS1))
+#
+# for i = 1:length(ERS1)
+#  if ERS1[i] > ERS2[i]
+#   big_I[i] = 1
+#   lil_I[i] = 2
+#  else
+#   big_I[i] = 2
+#   lil_I[i] = 1
+#  end
+# end
+#
+# bolth = zeros(2, length(ERS1))
+# for i= 1:length(ERS1)
+#  bolth[1, i] = I1mn[i]
+#  bolth[2,i] = I2mn[i]
+# end
+#
+# big_in = zeros(length(ERS1))
+# lil_in = zeros(length(ERS1))
+# for i = 1:length(ERS1)
+#  big_in[i] = bolth[big_I[i], i]
+#  lil_in[i] = bolth[lil_I[i], i]
+# end
+#
+# plot(big_in, big_inh, ".", ms = 15., label = "Inhibitory Pool, Dominant Circuit")
+# plot(lil_in, lil_inh, ".", ms = 15., label = "Inhibitory Pool, Supressed Circuit")
+# axvline(big_in[10], linestyle = "dashed")
+# axvline(lil_in[10], linestyle = "dashed")
+#
+#
+
+### Threshold Adjusted Predictions
+s_strength = 3.08
+
+### Get rate, input, for dominant pool
+
+big_inh = zeros(length(ERS1)) #inhibitory rate in dominant CIRCUIT
+big_exc = zeros(length(ERS1)) #excitatory rate in dominant CIRCUIT
+lil_inh = zeros(length(ERS1)) #same, for suppressed circuits
+lil_exc = zeros(length(ERS1))
+for i = 1:length(ERS1)
+ if ERS1[i] > ERS2[i]
+  big_inh[i] = IRS1[i]
+  big_exc[i] = ERS1[i]
+  lil_inh[i] = IRS2[i]
+  lil_exc[i] = ERS2[i]
+ else
+  big_inh[i] = IRS2[i]
+  big_exc[i] = ERS2[i]
+  lil_inh[i] = IRS1[i]
+  lil_exc[i] = ERS1[i]
+ end
+end
+
+
+big_inh_input = zeros(length(ERS1))
+big_exc_input = zeros(length(ERS1))
+lil_inh_input = zeros(length(ERS1))
+lil_exc_input = zeros(length(ERS1))
+for i = 1:length(ERS1)
+ if ERS1[i] > ERS2[i]
+  big_inh_input[i] = I1mn[i]
+  big_exc_input[i] = E1mn[i]
+  lil_inh_input[i] = I2mn[i]
+  lil_exc_input[i] = E2mn[i]
+ else
+  big_inh_input[i] = I2mn[i]
+  big_exc_input[i] = E2mn[i]
+  lil_inh_input[i] = I1mn[i]
+  lil_exc_input[i] = E1mn[i]
+ end
+end
+
+# LE1W, LI1W = theory_rates_2x2(abs(WEE1[1]), abs(WIE1[1]), abs(WEI1[1]), abs(WII1[1]), s_strength .- big_exc_input, 0 .- big_inh_input)
+# LE2L, LI2L = theory_rates_2x2(abs(WEE2[1]), abs(WIE2[1]), abs(WEI2[1]), abs(WII2[1]), s_strength .- lil_exc_input, 0 .- lil_inh_input)
+#
+# plot(Aie_NLS, big_exc, "bx", ms = 15, label = "E_winner Sim")
+# plot(Aie_NLS, lil_exc, "rx", ms = 15, label = "E_loser Sim")
+# plot(Aie_NLS, LE1W, "b.", ms = 15, label = "E_winner 2x2 theory")
+# plot(Aie_NLS, LE2L, "r.", ms = 15, label = "E_loser 2x2 theory")
+#
+# plot(Aie_NLS, big_inh, "b+", ms = 15., label = "I_winner Sim")
+# plot(Aie_NLS, lil_inh, "r+", ms = 15., label = "I_loser Sim")
+# plot(Aie_NLS, LI1W, "b*", ms = 15, label = "I_winner 2x2 theory")
+# plot(Aie_NLS, LI2L, "r*", ms = 15, label = "I_loser 2x2 theory")
+# legend()
+#
+# ##########dominant only, then suppressed only
+# plot(Aie_NLS, big_exc, "b+", ms = 15, label = "E_winner Sim")
+# plot(Aie_NLS, LE1W, "b.", ms = 15, label = "E_winner 2x2 theory")
+# plot(Aie_NLS, big_inh, "r+", ms = 15., label = "I_winner Sim")
+# plot(Aie_NLS, LI1W, "r.", ms = 15, label = "I_winner 2x2 theory")
+# legend()
+#
+#
+#
+# plot(Aie_NLS, lil_exc, "b+", ms = 15, label = "E_loser Sim")
+# plot(Aie_NLS, LE2L, "b.", ms = 15, label = "E_loser 2x2 theory")
+# plot(Aie_NLS, lil_inh, "r+", ms = 15., label = "I_loser Sim")
+# plot(Aie_NLS, LI2L, "r.", ms = 15, label = "I_loser 2x2 theory")
+# legend()
+#
+# WEEz = [abs(i) for i in WEE1]
+# WEIz = [abs(i) for i in WEI1]
+# WIEz = [abs(i) for i in WIE1]
+# WIELz = [abs(i) for i in WIEL1]
+# WIIz = [abs(i) for i in WII1]
+
+
+REW_4x4, RIW_4x4 = theory_rates_4x4_1C(WEEz, WIEz, WIELz, WEIz, WIIz, s_strength .- big_exc_input, 0 .- big_inh_input)
+REL_4x4, RIL_4x4 = theory_rates_4x4_1C(WEEz, WIEz, WIELz, WEIz, WIIz, s_strength .- lil_exc_input, 0 .- lil_inh_input)
+
+plot(Aie_NLS, big_exc, "b+", ms = 15, label = "E_winner Sim")
+plot(Aie_NLS, REW_4x4, "b.", ms = 15, label = "E_winner 4x4 theory")
+plot(Aie_NLS, big_inh, "r+", ms = 15, label = "I_winner Sim")
+plot(Aie_NLS, RIW_4x4, "r.", ms = 15, label = "I_winner 4x4 theory")
+axvline(Aie_NLS[10], linestyle="dashed")
 legend()
 xlabel("Aie_LONG")
 ylabel("Rate (Hz)")
-title("2x2 predictions with fi = fi + long range input")
-# rex1, rix1 = theory_rates_2x2(abs(WEE_1), abs(WIE_1), abs(WEI_1), abs(WII_1), FE, FI)
-# rex2, rix2 = theory_rates_2x2(abs(WEE_2), abs(WIE_2), abs(WEI_2), abs(WII_2), FE, FI)
+title("Threshold Adjusted 4x4 Theory: More Active Pool")
+
+
+plot(Aie_NLS, big_exc, "b.", ms = 15, label = "E_winner Sim")
+plot(Aie_NLS, REW_4x4, "bx", ms = 15, label = "E_winner 4x4 theory")
+plot(Aie_NLS, big_inh, "r.", ms = 15, label = "I_winner Sim")
+plot(Aie_NLS, RIW_4x4, "rx", ms = 15, label = "I_winner 4x4 theory")
+plot(Aie_NLS, LE1W, "b+", ms = 15, label = "E_winner 2x2 theory")
+plot(Aie_NLS, LI1W, "r+", ms = 15, label = "I_winner 2x2 theory")
+axvline(Aie_NLS[10], linestyle="dashed")
+legend()
+xlabel("Aie_LONG")
+ylabel("Rate (Hz)")
+title("Threshold Adjusted 4x4 Theory: More Active Pool")
+
+TE = [-.23 for i = 1:length(IRS1)]
+TI = [-.155 for i = 1:length(IRS1)]
+
+LE1W, LI1W = theory_rates_2x2(abs(WEE1[1]), abs(WIE1[1]), abs(WEI1[1]), abs(WII1[1]), s_strength .- TE, 0 .- TI)
+LE2L, LI2L = theory_rates_2x2(abs(WEE2[1]), abs(WIE2[1]), abs(WEI2[1]), abs(WII2[1]), s_strength .- lil_exc_input, 0 .- lil_inh_input)
+
+REW_4x4, RIW_4x4 = theory_rates_4x4_1C(WEEz, WIEz, WIELz, WEIz, WIIz, s_strength .- TE, 0 .- TI)
+REL_4x4, RIL_4x4 = theory_rates_4x4_1C(WEEz, WIEz, WIELz, WEIz, WIIz, s_strength .- lil_exc_input, 0 .- lil_inh_input)

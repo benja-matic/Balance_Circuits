@@ -1205,6 +1205,13 @@ function theory_rates(WEE_1, WEE_2, WIE_1, WIE_2, WIEL_1, WIEL_2, WEI_1, WEI_2, 
   return RE1, RI1, RE2, RI2
 end
 
+function theory_rates_4x4_1C(WEE_1, WIE_1, WIEL_1, WEI_1, WII_1, FE, FI)
+  RE1 = ((WII_1 .* FE) .- (WEI_1 .* FI)) ./ (((WEI_1 .* (WIE_1 .+ WIEL_1)) .- (WII_1 .* WEE_1)))
+  RI1 = ((FE .* (WIE_1 .+ WIEL_1)) .- (WEE_1 .* FI)) ./ (((WEI_1 .* (WIE_1 .+ WIEL_1)) .- (WII_1 .* WEE_1)))
+  return RE1, RI1
+end
+
+
 function sim_2_theory_2x2(SEE, SEI, SIE, SII, fe, fi, cth, re1, ri1, n)
 
     FE = fe - cth

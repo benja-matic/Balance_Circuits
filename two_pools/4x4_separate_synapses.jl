@@ -210,7 +210,7 @@ function euler_lif_CSR_4x4_s(h, total, N, IFRAC, W, CSR, fe, fi, vth, tau_m, tau
             syn_ie[NiL+1:Ni2] .+= W[Ne2+NiL+1:N, js] .* lx
             syn_ieL[1:NiL] .+= W[Ne2+1:Ne2+NiL, js] .* lx
           end
-          Ae .+= 1
+          Ae[js] .+= 1
           push!(raster_e, js)
           push!(time_e, iter-delta_h)
         end
