@@ -66,14 +66,14 @@ I2mn = []
 # Ss = [-.5, -.25, 0., 0.25, 0.5]
 # # Ss = [2.8, 2.9, 3., 3.1, 3.2]
 # for i in Ss
-Aie_NLS = linspace(0,80,30)
+Aie_NLS = linspace(0,80,10)
 # Aie_NLS = [0, 10, 20, 30, 40, 50, 60, 65, 70, 75, 80]
 # Aie_NLS = [71.5, 71.75, 72., 72.25, 72.5, 72.75, 73, 73.25, 73.5, 73.75, 74, 74.25, 74.5, 74.75, 75]
-# for i in Aie_NLS
+for i in Aie_NLS
 Aee = 5.
 Aei = 40.
 Aie = 70.
-Aie_NL = 10.
+Aie_NL = i
 Aii = 20.
 
 #Aie = [200, 400, 600, 800, 1000]
@@ -254,7 +254,7 @@ push!(wta, wta_ness)
 # push!(ICV1, mean(CV_ITOP))
 # push!(ICV2, mean(CV_IBOT))
 #
-# end
+end
 
 # Aeis = [20,30,40,50,60]
 # RET .*= 1000.
@@ -697,112 +697,167 @@ WIIz = [abs(i) for i in WII1]
 REW_4x4, RIW_4x4 = theory_rates_4x4_1C(WEEz, WIEz, WIELz, WEIz, WIIz, s_strength .- big_exc_input, 0 .- big_inh_input)
 REL_4x4, RIL_4x4 = theory_rates_4x4_1C(WEEz, WIEz, WIELz, WEIz, WIIz, s_strength .- lil_exc_input, 0 .- lil_inh_input)
 
-plot(Aie_NLS, big_exc, "b+", ms = 15, label = "E_winner Sim")
-plot(Aie_NLS, REW_4x4, "b.", ms = 15, label = "E_winner 4x4 theory")
-plot(Aie_NLS, big_inh, "r+", ms = 15, label = "I_winner Sim")
-plot(Aie_NLS, RIW_4x4, "r.", ms = 15, label = "I_winner 4x4 theory")
-axvline(Aie_NLS[10], linestyle="dashed")
-legend()
-xlabel("Aie_LONG")
-ylabel("Rate (Hz)")
-title("Threshold Adjusted 4x4 Theory: More Active Pool")
-
-
-plot(Aie_NLS, big_exc, "b.", ms = 15, label = "E_winner Sim")
-plot(Aie_NLS, REW_4x4, "bx", ms = 15, label = "E_winner 4x4 theory")
-plot(Aie_NLS, big_inh, "r.", ms = 15, label = "I_winner Sim")
-plot(Aie_NLS, RIW_4x4, "rx", ms = 15, label = "I_winner 4x4 theory")
-plot(Aie_NLS, LE1W, "b+", ms = 15, label = "E_winner 2x2 theory")
-plot(Aie_NLS, LI1W, "r+", ms = 15, label = "I_winner 2x2 theory")
-axvline(Aie_NLS[28], linestyle="dashed")
-legend()
-xlabel("Aie_LONG")
-ylabel("Rate (Hz)")
-title("Threshold Adjusted 4x4 Theory: More Active Pool")
-
-TE = [-.227 for i = 1:length(IRS1)]
-TI = [-.1 for i = 1:length(IRS1)]
-
-LE1W, LI1W = theory_rates_2x2(abs(WEE1[1]), abs(WIE1[1]), abs(WEI1[1]), abs(WII1[1]), s_strength .- TE, 0 .- TI)
-LE2L, LI2L = theory_rates_2x2(abs(WEE2[1]), abs(WIE2[1]), abs(WEI2[1]), abs(WII2[1]), s_strength .- lil_exc_input, 0 .- lil_inh_input)
-LE2L, LI2L = theory_rates_2x2(abs(WEE2[1]), abs(WIE2[1]), abs(WEI2[1]), abs(WII2[1]), s_strength .- TE, 0 .- TI)
-
-REW_4x4, RIW_4x4 = theory_rates_4x4_1C(WEEz, WIEz, WIELz, WEIz, WIIz, s_strength .- TE, 0 .- TI)
-REL_4x4, RIL_4x4 = theory_rates_4x4_1C(WEEz, WIEz, WIELz, WEIz, WIIz, s_strength .- lil_exc_input, 0 .- lil_inh_input)
-REL_4x4, RIL_4x4 = theory_rates_4x4_1C(WEEz, WIEz, WIELz, WEIz, WIIz, s_strength .- TE, 0 .- TI)
+# plot(Aie_NLS, big_exc, "b+", ms = 15, label = "E_winner Sim")
+# plot(Aie_NLS, REW_4x4, "b.", ms = 15, label = "E_winner 4x4 theory")
+# plot(Aie_NLS, big_inh, "r+", ms = 15, label = "I_winner Sim")
+# plot(Aie_NLS, RIW_4x4, "r.", ms = 15, label = "I_winner 4x4 theory")
+# axvline(Aie_NLS[10], linestyle="dashed")
+# legend()
+# xlabel("Aie_LONG")
+# ylabel("Rate (Hz)")
+# title("Threshold Adjusted 4x4 Theory: More Active Pool")
+#
+#
+# plot(Aie_NLS, big_exc, "b.", ms = 15, label = "E_winner Sim")
+# plot(Aie_NLS, REW_4x4, "bx", ms = 15, label = "E_winner 4x4 theory")
+# plot(Aie_NLS, big_inh, "r.", ms = 15, label = "I_winner Sim")
+# plot(Aie_NLS, RIW_4x4, "rx", ms = 15, label = "I_winner 4x4 theory")
+# plot(Aie_NLS, LE1W, "b+", ms = 15, label = "E_winner 2x2 theory")
+# plot(Aie_NLS, LI1W, "r+", ms = 15, label = "I_winner 2x2 theory")
+# axvline(Aie_NLS[28], linestyle="dashed")
+# legend()
+# xlabel("Aie_LONG")
+# ylabel("Rate (Hz)")
+# title("Threshold Adjusted 4x4 Theory: More Active Pool")
+#
+# TE = [-.227 for i = 1:length(IRS1)]
+# TI = [-.1 for i = 1:length(IRS1)]
+#
+# LE1W, LI1W = theory_rates_2x2(abs(WEE1[1]), abs(WIE1[1]), abs(WEI1[1]), abs(WII1[1]), s_strength .- TE, 0 .- TI)
+# LE2L, LI2L = theory_rates_2x2(abs(WEE2[1]), abs(WIE2[1]), abs(WEI2[1]), abs(WII2[1]), s_strength .- lil_exc_input, 0 .- lil_inh_input)
+# LE2L, LI2L = theory_rates_2x2(abs(WEE2[1]), abs(WIE2[1]), abs(WEI2[1]), abs(WII2[1]), s_strength .- TE, 0 .- TI)
+#
+# REW_4x4, RIW_4x4 = theory_rates_4x4_1C(WEEz, WIEz, WIELz, WEIz, WIIz, s_strength .- TE, 0 .- TI)
+# REL_4x4, RIL_4x4 = theory_rates_4x4_1C(WEEz, WIEz, WIELz, WEIz, WIIz, s_strength .- lil_exc_input, 0 .- lil_inh_input)
+# REL_4x4, RIL_4x4 = theory_rates_4x4_1C(WEEz, WIEz, WIELz, WEIz, WIIz, s_strength .- TE, 0 .- TI)
 
 ###Test Suppressed Circuit Rates against 2x2 theory with and without adjusting fi with long range input
 
-plot(Aie_NLS, lil_exc, "b.", ms = 15, label = "E_loser Sim")
-plot(Aie_NLS, REW_4x4, "bx", ms = 15, label = "E_loser 4x4 theory")
-plot(Aie_NLS, lil_inh, "r.", ms = 15, label = "I_loser Sim")
-plot(Aie_NLS, RIW_4x4, "rx", ms = 15, label = "I_loser 4x4 theory")
-plot(Aie_NLS, LE1W, "b+", ms = 15, label = "E_loser 2x2 theory")
-plot(Aie_NLS, LI1W, "r+", ms = 15, label = "I_loser 2x2 theory")
-axvline(Aie_NLS[28], linestyle="dashed")
-legend()
-xlabel("Aie_LONG")
-ylabel("Rate (Hz)")
-title("Threshold Adjusted Theory: Less Active Pool")
-
-
-#modify fi with long range input
-LE1Wi, LI1Wi = theory_rates_2x2(abs(WEE1[1]), abs(WIE1[1]), abs(WEI1[1]), abs(WII1[1]), s_strength .- TE, 0 .- TI .+ big_LR)
-LE2Li, LI2Li = theory_rates_2x2(abs(WEE2[1]), abs(WIE2[1]), abs(WEI2[1]), abs(WII2[1]), s_strength .- TE, 0 .- TI .+ lil_LR)
-
-plot(Aie_NLS, lil_exc, "b.", ms = 15, label = "E_loser Sim")
-plot(Aie_NLS, REW_4x4, "bx", ms = 15, label = "E_loser 4x4 theory")
-plot(Aie_NLS, lil_inh, "r.", ms = 15, label = "I_loser Sim")
-plot(Aie_NLS, RIW_4x4, "rx", ms = 15, label = "I_loser 4x4 theory")
-plot(Aie_NLS, LE2Li, "b+", ms = 15, label = "E_loser 2x2 theory")
-plot(Aie_NLS, LI2Li, "r+", ms = 15, label = "I_loser 2x2 theory")
-axvline(Aie_NLS[28], linestyle="dashed")
-legend()
-xlabel("Aie_LONG")
-ylabel("Rate (Hz)")
-title("Input Adjusted Theory: Less Active Pool")
+# plot(Aie_NLS, lil_exc, "b.", ms = 15, label = "E_loser Sim")
+# plot(Aie_NLS, REW_4x4, "bx", ms = 15, label = "E_loser 4x4 theory")
+# plot(Aie_NLS, lil_inh, "r.", ms = 15, label = "I_loser Sim")
+# plot(Aie_NLS, RIW_4x4, "rx", ms = 15, label = "I_loser 4x4 theory")
+# plot(Aie_NLS, LE1W, "b+", ms = 15, label = "E_loser 2x2 theory")
+# plot(Aie_NLS, LI1W, "r+", ms = 15, label = "I_loser 2x2 theory")
+# axvline(Aie_NLS[28], linestyle="dashed")
+# legend()
+# xlabel("Aie_LONG")
+# ylabel("Rate (Hz)")
+# title("Threshold Adjusted Theory: Less Active Pool")
 #
-plot(Aie_NLS, big_exc, "b.", ms = 15, label = "E_winner Sim")
-plot(Aie_NLS, REW_4x4, "bx", ms = 15, label = "E_winner 4x4 theory")
-plot(Aie_NLS, big_inh, "r.", ms = 15, label = "I_winner Sim")
-plot(Aie_NLS, RIW_4x4, "rx", ms = 15, label = "I_winner 4x4 theory")
-plot(Aie_NLS, LE1Wi, "b+", ms = 15, label = "E_winner 2x2 theory")
-plot(Aie_NLS, LI1Wi, "r+", ms = 15, label = "I_winner 2x2 theory")
-axvline(Aie_NLS[28], linestyle="dashed")
-legend()
-xlabel("Aie_LONG")
-ylabel("Rate (Hz)")
-title("Threshold Adjusted 4x4 Theory: More Active Pool")
+#
+# #modify fi with long range input
+# LE1Wi, LI1Wi = theory_rates_2x2(abs(WEE1[1]), abs(WIE1[1]), abs(WEI1[1]), abs(WII1[1]), s_strength .- TE, 0 .- TI .+ big_LR)
+# LE2Li, LI2Li = theory_rates_2x2(abs(WEE2[1]), abs(WIE2[1]), abs(WEI2[1]), abs(WII2[1]), s_strength .- TE, 0 .- TI .+ lil_LR)
+#
+# plot(Aie_NLS, lil_exc, "b.", ms = 15, label = "E_loser Sim")
+# plot(Aie_NLS, REW_4x4, "bx", ms = 15, label = "E_loser 4x4 theory")
+# plot(Aie_NLS, lil_inh, "r.", ms = 15, label = "I_loser Sim")
+# plot(Aie_NLS, RIW_4x4, "rx", ms = 15, label = "I_loser 4x4 theory")
+# plot(Aie_NLS, LE2Li, "b+", ms = 15, label = "E_loser 2x2 theory")
+# plot(Aie_NLS, LI2Li, "r+", ms = 15, label = "I_loser 2x2 theory")
+# axvline(Aie_NLS[28], linestyle="dashed")
+# legend()
+# xlabel("Aie_LONG")
+# ylabel("Rate (Hz)")
+# title("Input Adjusted Theory: Less Active Pool")
+# #
+# plot(Aie_NLS, big_exc, "b.", ms = 15, label = "E_winner Sim")
+# plot(Aie_NLS, REW_4x4, "bx", ms = 15, label = "E_winner 4x4 theory")
+# plot(Aie_NLS, big_inh, "r.", ms = 15, label = "I_winner Sim")
+# plot(Aie_NLS, RIW_4x4, "rx", ms = 15, label = "I_winner 4x4 theory")
+# plot(Aie_NLS, LE1Wi, "b+", ms = 15, label = "E_winner 2x2 theory")
+# plot(Aie_NLS, LI1Wi, "r+", ms = 15, label = "I_winner 2x2 theory")
+# axvline(Aie_NLS[28], linestyle="dashed")
+# legend()
+# xlabel("Aie_LONG")
+# ylabel("Rate (Hz)")
+# title("Threshold Adjusted 4x4 Theory: More Active Pool")
 
 
 
 #check if we can predict the instability
 
-b1 = get_b_g(WEEz, WIIz, s_strength .- TE, -TI)
-c1 = get_c_g(WEEz, WEIz, WIEz, WIIz, s_strength .- TE, -TI)
-d1 = get_d_g(WEIz, WIELz, s_strength .- TE, -TI)
-b1 =convert(Array{Float64}, b1)
-c1 =convert(Array{Float64}, c1)
-d1 =convert(Array{Float64}, d1)
-rpp = b1 .+ sqrt(complex(c1 .+ d1))
-rpm = b1 .+ sqrt(complex(c1 .- d1))
-rmp = b1 .- sqrt(complex(c1 .+ d1))
-rmm = b1 .- sqrt(complex(c1 .- d1))
+# b1 = get_b_g(WEEz, WIIz, s_strength .- TE, -TI)
+# c1 = get_c_g(WEEz, WEIz, WIEz, WIIz, s_strength .- TE, -TI)
+# d1 = get_d_g(WEIz, WIELz, s_strength .- TE, -TI)
+# b1 =convert(Array{Float64}, b1)
+# c1 =convert(Array{Float64}, c1)
+# d1 =convert(Array{Float64}, d1)
+# rpp = b1 .+ sqrt(complex(c1 .+ d1))
+# rpm = b1 .+ sqrt(complex(c1 .- d1))
+# rmp = b1 .- sqrt(complex(c1 .+ d1))
+# rmm = b1 .- sqrt(complex(c1 .- d1))
+#
+# plot(WIELz, rpp, ".", ms = 15.)
+# # plot(WIELz, rpm, ".", ms = 15.)
+# # plot(WIELz, rmp, ".", ms = 15.)
+# # plot(WIELz, rmm, ".", ms = 15.)
+#
+# plot(WIELz, rpp, ".", ms = 15.)
+# legend()
+# xlabel("Theoretical WIE_LONG")
+# ylabel("++ Eigenvalue")
+# title("Predicting Instability With Adjusted Thresholds")
+# axvline(WIELz[28], linestyle = "dashed")
+# axhline(0,linestyle = "dashed")
 
-plot(WIELz, rpp, ".", ms = 15.)
-# plot(WIELz, rpm, ".", ms = 15.)
-# plot(WIELz, rmp, ".", ms = 15.)
-# plot(WIELz, rmm, ".", ms = 15.)
 
-plot(WIELz, rpp, ".", ms = 15.)
+
+###4x4 with separated feedforward input
+# TE1 = [mean(E1mn) for i = 1:length(IRS1)]
+# TI1 = [mean(I1mn) for i = 1:length(IRS1)]
+# TE2 = [mean(E2mn) for i = 1:length(IRS1)]
+# TI2 = [mean(I2mn) for i = 1:length(IRS1)]
+
+TE1 = [-.5 for i = 1:length(IRS1)]
+TI1 = [-.12 for i = 1:length(IRS1)]
+TE2 = [-.5 for i = 1:length(IRS1)]
+TI2 = [-.12 for i = 1:length(IRS1)]
+
+RE1_4x4_sf, RE2_4x4_sf, RI1_4x4_sf, RI2_4x4_sf = theory_rates_4x4_sf(WEEz, WIEz, WIELz, WEIz, WIIz, fe .- TE1, 0 .- TI1, fe2 .- TE2, 0 .- TI2)
+
+plot(Aie_NLS, big_exc, "b.", ms = 15, label = "E_winner Sim")
+plot(Aie_NLS, lil_exc, "r.", ms = 15, label = "E_loser Sim")
+plot(Aie_NLS, RE2_4x4_sf, "b+", ms = 15, label = "E Theory win")
+plot(Aie_NLS, RE1_4x4_sf, "r+", ms = 15, label = "E Theory los")
 legend()
-xlabel("Theoretical WIE_LONG")
-ylabel("++ Eigenvalue")
-title("Predicting Instability With Adjusted Thresholds")
-axvline(WIELz[28], linestyle = "dashed")
-axhline(0,linestyle = "dashed")
+xlabel("Aie_LONG")
+ylabel("Rate (Hz)")
+title("Separate f 4x4 Theory: Excitatory Neurons")
 
+plot(Aie_NLS, big_inh, "b.", ms = 15, label = "I_winner Sim")
+plot(Aie_NLS, lil_inh, "r.", ms = 15, label = "I_loser Sim")
+plot(Aie_NLS, RI2_4x4_sf, "b+", ms = 15, label = "I Theory win")
+plot(Aie_NLS, RI1_4x4_sf, "r+", ms = 15, label = "I Theory los")
+legend()
+xlabel("Aie_LONG")
+ylabel("Rate (Hz)")
+title("Separate f 4x4 Theory: Inhibitory Neurons")
 
+LE1W, LI1W = theory_rates_2x2(abs(WEE1[1]), abs(WIE1[1]), abs(WEI1[1]), abs(WII1[1]), fe2 .- TE, 0 .- TI)
+LE1Wi, LI1Wi = theory_rates_2x2(abs(WEE1[1]), abs(WIE1[1]), abs(WEI1[1]), abs(WII1[1]), fe .- TE, 0 .- TI .+ big_LR)
+LE2Li, LI2Li = theory_rates_2x2(abs(WEE2[1]), abs(WIE2[1]), abs(WEI2[1]), abs(WII2[1]), fe .- TE, 0 .- TI .+ lil_LR)
+REW_4x4, RIW_4x4 = theory_rates_4x4_1C(WEEz, WIEz, WIELz, WEIz, WIIz, fe2.- TE, 0 .- TI)
 
-###check if the 4x4 derivation with separate f terms gives the same as normal 4x4 when f terms are the same
-REW_4x4_sf, REL_4x4_sf, RIW_4x4_sf, RIL_4x4_sf = theory_rates_4x4_sf(WEEz, WIEz, WIELz, WEIz, WIIz, s_strength .- TE, 0 .- TI, s_strength .- TE, 0 .- TI)
+plot(Aie_NLS, big_exc, "b.", ms = 15, label = "E_winner Sim")
+plot(Aie_NLS, REW_4x4, "bx", ms = 15, label = "E_winner 4x4 theory standard")
+plot(Aie_NLS, big_inh, "r.", ms = 15, label = "I_winner Sim")
+plot(Aie_NLS, RIW_4x4, "rx", ms = 15, label = "I_winner 4x4 theory standard")
+plot(Aie_NLS, LE1Wi, "b+", ms = 15, label = "E_winner 2x2 theory input adjusted")
+plot(Aie_NLS, LI1Wi, "r+", ms = 15, label = "I_winner 2x2 theory input adjusted")
+legend()
+xlabel("Aie_LONG")
+ylabel("Rate (Hz)")
+title("Threshold Adjusted 4x4 Theory: More Active Pool")
+
+plot(Aie_NLS, big_exc, "b.", ms = 15, label = "E_winner Sim")
+plot(Aie_NLS, REW_4x4, "bx", ms = 15, label = "E_winner 4x4 theory standard")
+plot(Aie_NLS, big_inh, "r.", ms = 15, label = "I_winner Sim")
+plot(Aie_NLS, RIW_4x4, "rx", ms = 15, label = "I_winner 4x4 theory standard")
+plot(Aie_NLS, LE1W, "b+", ms = 15, label = "E_winner 2x2 theory")
+plot(Aie_NLS, LI1W, "r+", ms = 15, label = "I_winner 2x2 theory")
+legend(loc=6)
+xlabel("Aie_LONG")
+ylabel("Rate (Hz)")
+title("Threshold Adjusted 4x4 Theory: More Active Pool")
