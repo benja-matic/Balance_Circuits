@@ -73,13 +73,15 @@ Aie_NLS = linspace(0,80,30)
 Aee = 5.
 Aei = 40.
 Aie = 70.
-Aie_NL = 75.
+Aie_NL = 10.
 Aii = 20.
 
 #Aie = [200, 400, 600, 800, 1000]
 
 s_strength = 3.08
 fe = s_strength
+fe2 = fe + .5
+fi2 = fi
 fi = 0.
 # p = .2
 k = 800
@@ -116,7 +118,7 @@ rt = ((ntotal - end_trans)/1000.)*h
 W = homogenous_4x4_weights(N, IFRAC, k, Aee, Aei, Aie, Aie_NL, Aii);
 CSR = sparse_rep(W, N);
 
-@time te, re, ti, ri, SEE, SEI, SIE, SIEL, SII = euler_lif_CSR_4x4_s(h, runtime, N, IFRAC, W, CSR, fe, fi, fe, fi, vth, tau_m, tau_s, tau_a, g_a)
+@time te, re, ti, ri, SEE, SEI, SIE, SIEL, SII = euler_lif_CSR_4x4_s(h, runtime, N, IFRAC, W, CSR, fe, fi, fe2, fi2, vth, tau_m, tau_s, tau_a, g_a)
 
 wta_ness, bias = score_analysis(re, Ne2)
 top_e_neurons, bot_e_neurons = Neurons_tb_ns(re, NeL, 10, min_e_neurons)
