@@ -1211,6 +1211,31 @@ function theory_rates_4x4_1C(WEE_1, WIE_1, WIEL_1, WEI_1, WII_1, FE, FI)
   return RE1, RI1
 end
 
+###Assume symmetric weights parameters
+function TR_4x4_sf(WEE_1, WIE_1, WIEL_1, WEI_1, WII_1, FE1, FI1, FE2, FI2)
+
+  n1 = (WIEL_1 .* FI2) .- (WIEL_1 .* FE2 .* WII_1 ./ WEI_1) .+ ((FI1 .- (FE1 .* WII_1 ./ WEI_1)) .* ((WEE_1 .* WII_1 ./ WEI_1) .- WIE_1))
+  d1 = (((WEE_1 .* WII_1 ./ WEI_1) .- WIE_1) .^2.) - WIEL_1 .^ 2
+  RE1 = n1 ./ d1
+
+  ### RE2 just swap out 1s and 2s in f terms. Assuming WEE_1 = WEE_2, etc.
+
+  n2 = (WIEL_1 .* FI1) .- (WIEL_1 .* FE1 .* WII_1 ./ WEI_1) .+ ((FI2 .- (FE2 .* WII_1 ./ WEI_1)) .* ((WEE_1 .* WII_1 ./ WEI_1) .- WIE_1))
+  d2 = (((WEE_1 .* WII_1 ./ WEI_1) .- WIE_1) .^2.) - WIEL_1 .^ 2
+  RE2 = n2 ./ d2
+
+  return RE1, RE2
+end
+
+function theory_rates_4x4_sf(WEE_1, WIE_1, WIEL_1, WEI_1, WII_1, FE1, FI1, FE2, FI2)
+
+  RE1, RE2 = TR_4x4_sf(WEE_1, WIE_1, WIEL_1, WEI_1, WII_1, FE1, FI1, FE2, FI2)
+
+  RI1 = ((WIE_1 .* RE1) .+ (WIEL_1 .* RE2) .+ FI1) ./ WII_1
+  RI2 = ((WIE_1 .* RE2) .+ (WIEL_1 .* RE1) .+ FI2) ./ WII_1
+
+  return RE1, RE2, RI1, RI2
+end
 
 function sim_2_theory_2x2(SEE, SEI, SIE, SII, fe, fi, cth, re1, ri1, n)
 
@@ -1269,12 +1294,12 @@ end
 #renormalized gain function values, which are W coefficients, are free parameters
 
 function get_b_g(wee, wii, ge, gi)
-  p = ((ge*wee) .- (gi*wii) .- 2)
+  p = ((ge .* wee) .- (gi .* wii) .- 2)
   return p./2.
 end
 
 function get_c_g(wee, wei, wie, wii, ge, gi)
-  p1 = ((gi*wii) .+ (ge*wee)) .^ 2.
+  p1 = ((gi .* wii) .+ (ge .* wee)) .^ 2.
   p2 = wei .* wie .* 4. .* ge .* gi
   return p1 .- p2
 end

@@ -119,15 +119,19 @@ function interpolate_spike(v2, v1, vth)
   return t
 end
 
-function euler_lif_CSR_4x4_s(h, total, N, IFRAC, W, CSR, fe, fi, vth, tau_m, tau_s, tau_a, g_a)
+function euler_lif_CSR_4x4_s(h, total, N, IFRAC, W, CSR, fe1, fi1, fe2, fi2, vth, tau_m, tau_s, tau_a, g_a)
 
   N2 = Int64(round(N/2)) #divide the network into two EI circuits
   NiL = Int64(round(N2/IFRAC))
   NeL = Int64(N2-NiL)
   Ne2 = NeL*2
   Ni2 = NiL*2
-  drive = zeros(Ne2) .+ fe*h
-  drivi = zeros(Ni2) .+ fi*h
+  drive = zeros(Ne2) #.+ fe*h
+  drive[1:NeL] = fe1*h
+  drive[NeL+1:Ne2] = fe2*h
+  drivi = zeros(Ni2) #.+ fi*h
+  drivi[1:NiL] = fi1*h
+  drivi[NiL+1:Ni2]= fi2*h
   # drive[1:NeL] .+= s*h
 
   ntotal = round(Int64, total/h)
