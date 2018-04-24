@@ -66,23 +66,24 @@ I2mn = []
 # Ss = [-.5, -.25, 0., 0.25, 0.5]
 # # Ss = [2.8, 2.9, 3., 3.1, 3.2]
 # for i in Ss
-Aie_NLS = linspace(0,80,10)
+# Aie_NLS = linspace(0,80,10)
 # Aie_NLS = [0, 10, 20, 30, 40, 50, 60, 65, 70, 75, 80]
 # Aie_NLS = [71.5, 71.75, 72., 72.25, 72.5, 72.75, 73, 73.25, 73.5, 73.75, 74, 74.25, 74.5, 74.75, 75]
-for i in Aie_NLS
+# for i in Aie_NLS
 Aee = 5.
 Aei = 40.
 Aie = 70.
-Aie_NL = i
+Aie_NL = 85.
 Aii = 20.
 
 #Aie = [200, 400, 600, 800, 1000]
 
 s_strength = 3.08
 fe = s_strength
-fe2 = fe + .5
-fi2 = fi
+fe2 = fe + .01
 fi = 0.
+fi2 = fi
+
 # p = .2
 k = 800
 
@@ -254,7 +255,7 @@ push!(wta, wta_ness)
 # push!(ICV1, mean(CV_ITOP))
 # push!(ICV2, mean(CV_IBOT))
 #
-end
+# end
 
 # Aeis = [20,30,40,50,60]
 # RET .*= 1000.
@@ -835,10 +836,15 @@ xlabel("Aie_LONG")
 ylabel("Rate (Hz)")
 title("Separate f 4x4 Theory: Inhibitory Neurons")
 
-LE1W, LI1W = theory_rates_2x2(abs(WEE1[1]), abs(WIE1[1]), abs(WEI1[1]), abs(WII1[1]), fe2 .- TE, 0 .- TI)
-LE1Wi, LI1Wi = theory_rates_2x2(abs(WEE1[1]), abs(WIE1[1]), abs(WEI1[1]), abs(WII1[1]), fe .- TE, 0 .- TI .+ big_LR)
-LE2Li, LI2Li = theory_rates_2x2(abs(WEE2[1]), abs(WIE2[1]), abs(WEI2[1]), abs(WII2[1]), fe .- TE, 0 .- TI .+ lil_LR)
-REW_4x4, RIW_4x4 = theory_rates_4x4_1C(WEEz, WIEz, WIELz, WEIz, WIIz, fe2.- TE, 0 .- TI)
+#standard 2x2 theory where fe = fe2
+LE1W, LI1W = theory_rates_2x2(abs(WEE1[1]), abs(WIE1[1]), abs(WEI1[1]), abs(WII1[1]), fe2 .- TE1, 0 .- TI1)
+LE1L, LI1L = theory_rates_2x2(abs(WEE1[1]), abs(WIE1[1]), abs(WEI1[1]), abs(WII1[1]), fe .- TE1, 0 .- TI1)
+
+#2x2 theory with long range input absorbed into fi
+LE1Wi, LI1Wi = theory_rates_2x2(abs(WEE1[1]), abs(WIE1[1]), abs(WEI1[1]), abs(WII1[1]), fe2 .- TE1, 0 .- TI1 .+ big_LR)
+LE2Li, LI2Li = theory_rates_2x2(abs(WEE2[1]), abs(WIE2[1]), abs(WEI2[1]), abs(WII2[1]), fe2 .- TE1, 0 .- TI1 .+ lil_LR)
+#standard 4x4 theory,
+REW_4x4, RIW_4x4 = theory_rates_4x4_1C(WEEz, WIEz, WIELz, WEIz, WIIz, fe2.- TE1, 0 .- TI1)
 
 plot(Aie_NLS, big_exc, "b.", ms = 15, label = "E_winner Sim")
 plot(Aie_NLS, REW_4x4, "bx", ms = 15, label = "E_winner 4x4 theory standard")
@@ -861,3 +867,85 @@ legend(loc=6)
 xlabel("Aie_LONG")
 ylabel("Rate (Hz)")
 title("Threshold Adjusted 4x4 Theory: More Active Pool")
+
+plot(Aie_NLS, big_exc, "b.", ms = 15, label = "E_winner Sim")
+plot(Aie_NLS, REW_4x4, "bx", ms = 15, label = "E_winner 4x4 theory standard")
+plot(Aie_NLS, big_inh, "r.", ms = 15, label = "I_winner Sim")
+plot(Aie_NLS, RIW_4x4, "rx", ms = 15, label = "I_winner 4x4 theory standard")
+plot(Aie_NLS, RE2_4x4_sf, "b+", ms = 15, label = "E Theory win")
+plot(Aie_NLS, RE1_4x4_sf, "r+", ms = 15, label = "E Theory los")
+legend()
+xlabel("Aie_LONG")
+ylabel("Rate (Hz)")
+title("Separate f 4x4 Theory: Excitatory Neurons")
+
+
+
+plot(Aie_NLS, big_exc, "b.", ms = 15, label = "E_winner Sim")
+plot(Aie_NLS, REW_4x4, "bx", ms = 15, label = "E_winner 4x4 theory standard")
+plot(Aie_NLS, RE2_4x4_sf, "b+", ms = 15, label = "E_winner SF")
+plot(Aie_NLS, LE1W, "bv", ms = 15, label = "E_winner 2x2 theory")
+plot(Aie_NLS, big_inh, "r.", ms = 15, label = "I_winner Sim")
+plot(Aie_NLS, RIW_4x4, "rx", ms = 15, label = "I_winner 4x4 theory standard")
+plot(Aie_NLS, RI2_4x4_sf, "r+", ms = 15, label = "I_winner SF")
+plot(Aie_NLS, LI1W, "rv", ms = 15, label = "I_winner 2x2 theory")
+legend()
+xlabel("Aie_LONG")
+ylabel("Rate (Hz)")
+title("Theories: Winning Circuit")
+
+
+plot(Aie_NLS, lil_exc, "b.", ms = 15, label = "E_loser Sim")
+plot(Aie_NLS, RE1_4x4_sf, "bx", ms = 15, label = "E_loser SF")
+plot(Aie_NLS, LE1L, "b+", ms = 15, label = "E_loser 2x2 theory")
+plot(Aie_NLS, lil_inh, "r.", ms = 15, label = "I_loser Sim")
+plot(Aie_NLS, RI1_4x4_sf, "rx", ms = 15, label = "I_loser SF")
+plot(Aie_NLS, LI1L, "r+", ms = 15, label = "I_loser 2x2 theory")
+legend()
+xlabel("Aie_LONG")
+ylabel("Rate (Hz)")
+title("Theories: Loser Circuit")
+
+
+plot(Aie_NLS, big_exc, "b.", ms = 15, label = "E_winner Sim")
+plot(Aie_NLS, RE2_4x4_sf, "bv", ms = 15, label = "E_winner SF")
+plot(Aie_NLS, LE1W, "b+", ms = 15, label = "E_winner 2x2 theory")
+plot(Aie_NLS, big_inh, "r.", ms = 15, label = "I_winner Sim")
+plot(Aie_NLS, RI2_4x4_sf, "rv", ms = 15, label = "I_winner SF")
+plot(Aie_NLS, LI1W, "r+", ms = 15, label = "I_winner 2x2 theory")
+legend()
+xlabel("Aie_LONG")
+ylabel("Rate (Hz)")
+title("Theories: Winning Circuit")
+
+
+#
+plot(Aie_NLS, big_exc, "b.", ms = 15, label = "E_winner Sim")
+plot(Aie_NLS, RE2_4x4_sf, "bv", ms = 15, label = "E_winner SF")
+plot(Aie_NLS, LE1W, "b", alpha = .2, label = "E_winner 2x2 theory")
+plot(Aie_NLS, REW_4x4, "bx", ms = 15, label = "E_winner 4x4 theory standard")
+plot(Aie_NLS, LE1Wi, "b+", ms = 15, label = "E_winner 2x2 theory input adjusted")
+
+
+# RE1_4x4_sf_dense, RE2_4x4_sf_dense, RI1_4x4_sf_dense, RI2_4x4_sf_dense = theory_rates_4x4_sf(WEEzd, WIEzd, WIELzd, WEIzd, WIIzd, fe .- TE1d, 0 .- TI1d, fe +.01 .- TE2d, 0 .- TI2d)
+# #
+# TE1d = [-.5 for i = 1:100]
+# TE2d = [-.5 for i = 1:100]
+# TI1d = [-.12 for i = 1:100]
+# TI2d = [-.12 for i = 1:100]
+#
+# WEEzd = [.275 for i=1:100]
+# WIEzd = [1.96 for i=1:100]
+# WIELzd = linspace(0, 2.2, 100)
+# WEIzd = [2.20 for i=1:100]
+# WIIzd = [1.10 for i=1:100]
+#
+# plot(Aie_NLS, big_exc, "b.", ms = 15, label = "E_winner Sim")
+# plot(Aie_NLS, big_inh, "r.", ms = 15, label = "I_winner Sim")
+# plot(WIELzd .* 36.36, RE2_4x4_sf_dense, "bx", label = "")
+
+
+# RE1_4x4_sf, RE2_4x4_sf, RI1_4x4_sf, RI2_4x4_sf = theory_rates_4x4_sf(WEEz, WIEz, WIELz, WEIz, WIIz, fe .- TE1, 0 .- TI1, fe+.2 .- TE2, 0 .- TI2)
+#
+# plot(WIELzd, RE1_4x4_sf_dense, "b.", ms = 15.)
+# plot(WIELzd, RE2_4x4_sf_dense, "r.", ms = 15.)
