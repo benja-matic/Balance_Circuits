@@ -66,14 +66,14 @@ I2mn = []
 # Ss = [-.5, -.25, 0., 0.25, 0.5]
 # # Ss = [2.8, 2.9, 3., 3.1, 3.2]
 # for i in Ss
-# Aie_NLS = linspace(0,80,10)
+Aie_NLS = linspace(0,80,10)
 # Aie_NLS = [0, 10, 20, 30, 40, 50, 60, 65, 70, 75, 80]
 # Aie_NLS = [71.5, 71.75, 72., 72.25, 72.5, 72.75, 73, 73.25, 73.5, 73.75, 74, 74.25, 74.5, 74.75, 75]
-# for i in Aie_NLS
+for i in Aie_NLS
 Aee = 5.
 Aei = 40.
 Aie = 70.
-Aie_NL = 85.
+Aie_NL = i
 Aii = 20.
 
 #Aie = [200, 400, 600, 800, 1000]
@@ -168,7 +168,7 @@ RE1_THEORY, RI1_THEORY, RE2_THEORY, RI2_THEORY = theory_rates(abs(WEE_1), abs(WE
 
 # RE1_THEORYc, RI1_THEORYc, RE2_THEORYc, RI2_THEORYc = theory_rates(abs(Aee), abs(Aee), abs(Aie), abs(Aie), abs(Aie_NL), abs(Aie_NL), abs(Aei), abs(Aei), abs(Aii), abs(Aii), s_strength, 0.)
 
-Input_E1, Input_E2, Input_I1, Input_I2 = estimate_I(SEE, SEI, SIE, SIEL, SII, s_strength, 100) ###needs to be adjusted for when we add feedforward input to the inhibitory neurons
+Input_E1, Input_E2, Input_I1, Input_I2 = estimate_I(SEE, SEI, SIE, SIEL, SII, fe1, fe2, fi1, fi2, 100) ###needs to be adjusted for when we add feedforward input to the inhibitory neurons
 
 sEm1 = zeros(50)
 sIm1 = zeros(50)
@@ -255,7 +255,7 @@ push!(wta, wta_ness)
 # push!(ICV1, mean(CV_ITOP))
 # push!(ICV2, mean(CV_IBOT))
 #
-# end
+end
 
 # Aeis = [20,30,40,50,60]
 # RET .*= 1000.
@@ -927,22 +927,22 @@ plot(Aie_NLS, REW_4x4, "bx", ms = 15, label = "E_winner 4x4 theory standard")
 plot(Aie_NLS, LE1Wi, "b+", ms = 15, label = "E_winner 2x2 theory input adjusted")
 
 
-# RE1_4x4_sf_dense, RE2_4x4_sf_dense, RI1_4x4_sf_dense, RI2_4x4_sf_dense = theory_rates_4x4_sf(WEEzd, WIEzd, WIELzd, WEIzd, WIIzd, fe .- TE1d, 0 .- TI1d, fe +.01 .- TE2d, 0 .- TI2d)
-# #
-# TE1d = [-.5 for i = 1:100]
-# TE2d = [-.5 for i = 1:100]
-# TI1d = [-.12 for i = 1:100]
-# TI2d = [-.12 for i = 1:100]
+RE1_4x4_sf_dense, RE2_4x4_sf_dense, RI1_4x4_sf_dense, RI2_4x4_sf_dense = theory_rates_4x4_sf(WEEzd, WIEzd, WIELzd, WEIzd, WIIzd, fe .- TE1d, 0 .- TI1d, fe +.01 .- TE2d, 0 .- TI2d)
 #
-# WEEzd = [.275 for i=1:100]
-# WIEzd = [1.96 for i=1:100]
-# WIELzd = linspace(0, 2.2, 100)
-# WEIzd = [2.20 for i=1:100]
-# WIIzd = [1.10 for i=1:100]
+TE1d = [-.5 for i = 1:100]
+TE2d = [-.5 for i = 1:100]
+TI1d = [-.12 for i = 1:100]
+TI2d = [-.12 for i = 1:100]
+
+WEEzd = [.275 for i=1:100]
+WIEzd = [1.96 for i=1:100]
+WIELzd = linspace(0, 2.2, 100)
+WEIzd = [2.20 for i=1:100]
+WIIzd = [1.10 for i=1:100]
 #
 # plot(Aie_NLS, big_exc, "b.", ms = 15, label = "E_winner Sim")
 # plot(Aie_NLS, big_inh, "r.", ms = 15, label = "I_winner Sim")
-# plot(WIELzd .* 36.36, RE2_4x4_sf_dense, "bx", label = "")
+plot(WIELzd, RE2_4x4_sf_dense, "bx", label = "")
 
 
 # RE1_4x4_sf, RE2_4x4_sf, RI1_4x4_sf, RI2_4x4_sf = theory_rates_4x4_sf(WEEz, WIEz, WIELz, WEIz, WIIz, fe .- TE1, 0 .- TI1, fe+.2 .- TE2, 0 .- TI2)

@@ -1158,7 +1158,8 @@ function sim_2_theory(SEE, SEI, SIE, SIEL, SII, fe, fi, cth, re1, re2, ri1, ri2,
     return WEE_1, WEE_2, WIE_1, WIE_2, WIEL_1, WIEL_2, WEI_1, WEI_2, WII_1, WII_2, FE, FI
 end
 
-function estimate_I(SEE, SEI, SIE, SIEL, SII, s_strength, n)
+#sample net input to neurons in each of 4 pools
+function estimate_I(SEE, SEI, SIE, SIEL, SII, fe1, fe2, fi1, fi2, n)
 
   n0 = div(n, 2)
   sE1 = zeros(n0)
@@ -1167,10 +1168,10 @@ function estimate_I(SEE, SEI, SIE, SIEL, SII, s_strength, n)
   sI2 = zeros(n0)
 
   for i = 1:n0
-      sE1[i] = mean(SEE[i,:][:] .+ SEI[i,:][:] .+ s_strength)
-      sE2[i] = mean(SEE[i+n0,:][:] .+ SEI[i+n0,:][:] .+ s_strength)
-      sI1[i] = mean(SIE[i,:][:] .+ SIEL[i,:][:] .+ SII[i,:][:])
-      sI2[i] = mean(SIE[i+n0,:][:] .+ SIEL[i+n0,:][:] .+ SII[i+n0,:][:])
+      sE1[i] = mean(SEE[i,:][:] .+ SEI[i,:][:] .+ fe1)
+      sE2[i] = mean(SEE[i+n0,:][:] .+ SEI[i+n0,:][:] .+ fe2)
+      sI1[i] = mean(SIE[i,:][:] .+ SIEL[i,:][:] .+ SII[i,:][:] .+ fi1)
+      sI2[i] = mean(SIE[i+n0,:][:] .+ SIEL[i+n0,:][:] .+ SII[i+n0,:][:] .+ fi2)
   end
 
   sE1m = mean(sE1)
