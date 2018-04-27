@@ -23,6 +23,7 @@ function homogenous_4x4_weights(N, IFRAC, k, Aee, Aei, Aie, Aie_NL, Aii)
   ke_local = round(Int64, k)
   ki_local = round(Int64, k)
   #kie = round(Int64, k/2) #half from your local circuit, half from the other local circuit
+  #removed that normalization, set k constant accross connection types
 
   Jee = Aee/ks
   Jei = -Aei/ks
@@ -67,13 +68,13 @@ function homogenous_4x4_weights(N, IFRAC, k, Aee, Aei, Aie, Aie_NL, Aii)
   ###IE AND II FOR BOTH CIRCUITS
   for i = Ne2+1:Ne2+Ni_local
 
-    ie1_inds = rand(1:Ne_local, ke)
+    ie1_inds = rand(1:Ne_local, ke_local)
     ii1_inds = rand(Ne2+1: Ne2+Ni_local, ki_local)
-    ie2_inds = rand(Ne_local+1:Ne2, ke)
+    ie2_inds = rand(Ne_local+1:Ne2, ke_local)
     ii2_inds = rand(Ne2+Ni_local+1:N, ki_local)
 
-    ieNL1_inds = rand(Ne_local+1:Ne2, ke)
-    ieNL2_inds = rand(1:Ne_local, ke)
+    ieNL1_inds = rand(Ne_local+1:Ne2, ke_local)
+    ieNL2_inds = rand(1:Ne_local, ke_local)
 
     for j in eachindex(ie1_inds)
       W[i, ie1_inds[j]] += Jie

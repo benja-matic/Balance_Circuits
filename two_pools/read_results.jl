@@ -131,5 +131,29 @@ plot(data[:,end-6][:], win_e_rate, ".", ms = 5., label = "N=16k")
 plot(N32[:, end-6], win_e_n32, ".", ms = 5., label = "N=32k")
 plot(N64[:, end-6], win_e_n64, ".", ms = 5., label = "N=64k")
 legend()
-
+xlabel("Long Range Strength")
+ylabel("Firing Rate (Hz)")
+title("4x4 SF Theory vs. Sim")
 #
+
+
+# RE1_4x4_sf_dense_N64, RE2_4x4_sf_dense_N64, RI1_4x4_sf_dense_N64, RI2_4x4_sf_dense_N64 = theory_rates_4x4_sf(Wee_N64, Wie_N64*2., WieL_N64*2., Wei_N64, Wii_N64, 3.08, 0., 3.09, 0.)
+N64A = readtable("KA_results.csv");
+Wee_N64A=s2ta(N64A[:,end-9][:], 800, 2);
+Wei_N64A=s2ta(N64A[:,end-8][:], 800, 2);
+Wie_N64A=s2ta(N64A[:,end-7][:], 800, 2);
+WieL_N64A=s2ta(N64A[:,end-6][:], 800, 2);
+Wii_N64A=s2ta(N64A[:,end-5][:], 800, 2);
+
+win_e_n64A = max(N64A[:,3], N64A[:,4]);
+los_e_n64A = min(N64A[:,3], N64A[:,4]);
+
+RE1_4x4_sf_dense_N64A, RE2_4x4_sf_dense_N64A, RI1_4x4_sf_dense_N64A, RI2_4x4_sf_dense_N64A = theory_rates_4x4_sf(Wee_N64A .-.01, Wie_N64A .-.01, WieL_N64A .-.01, Wei_N64A .-.01, Wii_N64A .-.01, 3.08, 0., 3.09, 0.);
+
+plot(N64A[:, end-6], RE2_4x4_sf_dense_N64A, ".", ms = 5., label = "4x4sf theory prediction")
+plot(N64A[:, end-6], win_e_n64A, ".", ms = 5., label = "N=64000, adjusted k (win)")
+plot(N64A[:, end-6], los_e_n64A, ".", ms = 5., label = "N=64000, adjusted k (los)")
+legend()
+xlabel("Long Range Strength")
+ylabel("Firing Rate (Hz)")
+title("4x4 SF Theory vs. Sim")

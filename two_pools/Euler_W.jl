@@ -98,7 +98,7 @@ function euler_lif_CSR(h, total, Ne, W, CSR, s1, s2, w2, input_width, vth, tau_m
   drive[P1s:P1e] .+= fe1*h
   drive[P2s:P2e] .+= fe2*h
 
-  maxdrive = maximum(fe1)
+  maxdrive = maximum(fe1*h)*1.2
   for i in eachindex(drive)
       if drive[i] > maxdrive
           drive[i] = maxdrive
