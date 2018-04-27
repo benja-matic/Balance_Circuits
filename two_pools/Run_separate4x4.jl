@@ -148,7 +148,7 @@ MIR2 = mean(I_R_top)#*(1/1000.)
 
 println("##RESULT $(wta_ness), $(bias), $(mean(E_R_bot)), $(mean(E_R_top)), $(mean(I_R_top)), $(mean(I_R_bot)), $(mean(CV_ETOP)), $(mean(CV_EBOT)), $(mean(CV_ITOP)), $(mean(CV_IBOT))")
 
-WEE_1, WEE_2, WIE_1, WIE_2, WIEL_1, WIEL_2, WEI_1, WEI_2, WII_1, WII_2, FE, FI = sim_2_theory(SEE, SEI, SIE, SIEL, SII, fe, fi, 1., MER1, MER2, MIR1, MIR2, 100)
+WEE_1, WEE_2, WIE_1, WIE_2, WIEL_1, WIEL_2, WEI_1, WEI_2, WII_1, WII_2, FE, FI = sim_2_theory(SEE, SEI, SIE, SIEL, SII, fe1, fe2, fi1, fi2, 1., MER1, MER2, MIR1, MIR2, 100)
 
 push!(WEE1, WEE_1)
 push!(WEI1, WEI_1)

@@ -1113,10 +1113,12 @@ end
 #     for k in range(N):
 #       text = "julia ./run_simplest.jl {0} {1} {2}\n".format(Aee[i], Aie[j], Aie_NL[k])
 #       newfile.write(text)
-function sim_2_theory(SEE, SEI, SIE, SIEL, SII, fe, fi, cth, re1, re2, ri1, ri2, n)
+function sim_2_theory(SEE, SEI, SIE, SIEL, SII, fe1, fe2, fi1, fi2, cth, re1, re2, ri1, ri2, n)
 
-    FE = fe - cth
-    FI = fi - cth
+    FE1 = fe1 - cth
+    FE2 = fe2 - cth
+    FI1 = fi1 - cth
+    FI2 = fi2 - cth
 
     n0 = div(n, 2)
 
@@ -1155,7 +1157,7 @@ function sim_2_theory(SEE, SEI, SIE, SIEL, SII, fe, fi, cth, re1, re2, ri1, ri2,
     WII_1 = mean(sii1)/ri1
     WII_2 = mean(sii2)/ri2
 
-    return WEE_1, WEE_2, WIE_1, WIE_2, WIEL_1, WIEL_2, WEI_1, WEI_2, WII_1, WII_2, FE, FI
+    return WEE_1, WEE_2, WIE_1, WIE_2, WIEL_1, WIEL_2, WEI_1, WEI_2, WII_1, WII_2, FE1, FE2, FI1, FI2
 end
 
 #sample net input to neurons in each of 4 pools
@@ -1231,6 +1233,32 @@ end
 function theory_rates_4x4_sf(WEE_1, WIE_1, WIEL_1, WEI_1, WII_1, FE1, FI1, FE2, FI2)
 
   RE1, RE2 = TR_4x4_sf(WEE_1, WIE_1, WIEL_1, WEI_1, WII_1, FE1, FI1, FE2, FI2)
+
+  RI1 = ((WIE_1 .* RE1) .+ (WIEL_1 .* RE2) .+ FI1) ./ WII_1
+  RI2 = ((WIE_1 .* RE2) .+ (WIEL_1 .* RE1) .+ FI2) ./ WII_1
+
+  return RE1, RE2, RI1, RI2
+end
+
+function TR_4x4_sf_gen(WEE_1, WEE_2, WIE_1, WIE_2, WIEL_1, WIEL_2, WEI_1, WEI_2, WII_1, WII_2, FE1, FI1, FE2, FI2)
+
+  n1 = (WIEL_1 .* FI2) .- (WIEL_1 .* FE2 .* WII_1 ./ WEI_1) .+ ((FI1 .- (FE1 .* WII_1 ./ WEI_1)) .* ((WEE_1 .* WII_1 ./ WEI_1) .- WIE_1))
+  d1 = (((WEE_1 .* WII_1 ./ WEI_1) .- WIE_1) .^2.) - WIEL_1 .^ 2
+  RE1 = n1 ./ d1
+
+  ### RE2 just swap out 1s and 2s in f terms. Assuming WEE_1 = WEE_2, etc.
+
+  n2 = (WIEL_2 .* FI1) .- (WIEL_2 .* FE1 .* WII_1 ./ WEI_2) .+ ((FI2 .- (FE2 .* WII_2 ./ WEI_2)) .* ((WEE_2 .* WII_2 ./ WEI_2) .- WIE_2))
+  d2 = (((WEE_2 .* WII_2 ./ WEI_2) .- WIE_2) .^2.) - WIEL_2 .^ 2
+  RE2 = n2 ./ d2
+
+  return RE1, RE2
+end
+
+
+function theory_rates_4x4_sf_gen(WEE_1, WEE_2, WIE_1, WIE_2, WIEL_1, WIEL_2, WEI_1,WEI_2, WII_1, WII_2, FE1, FI1, FE2, FI2)
+
+  RE1, RE2 = TR_4x4_sf(WEE_1, WEE_2, WIE_1, WIE_2, WIEL_1, WIEL_2, WEI_1,WEI_2, WII_1, WII_2, FE1, FI1, FE2, FI2)
 
   RI1 = ((WIE_1 .* RE1) .+ (WIEL_1 .* RE2) .+ FI1) ./ WII_1
   RI2 = ((WIE_1 .* RE2) .+ (WIEL_1 .* RE1) .+ FI2) ./ WII_1
