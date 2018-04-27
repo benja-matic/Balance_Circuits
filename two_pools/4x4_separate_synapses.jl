@@ -22,7 +22,7 @@ function homogenous_4x4_weights(N, IFRAC, k, Aee, Aei, Aie, Aie_NL, Aii)
   ki = k
   ke_local = round(Int64, k)
   ki_local = round(Int64, k)
-  kie = round(Int64, k/2) #half from your local circuit, half from the other local circuit
+  #kie = round(Int64, k/2) #half from your local circuit, half from the other local circuit
 
   Jee = Aee/ks
   Jei = -Aei/ks
@@ -67,13 +67,13 @@ function homogenous_4x4_weights(N, IFRAC, k, Aee, Aei, Aie, Aie_NL, Aii)
   ###IE AND II FOR BOTH CIRCUITS
   for i = Ne2+1:Ne2+Ni_local
 
-    ie1_inds = rand(1:Ne_local, kie)
+    ie1_inds = rand(1:Ne_local, ke)
     ii1_inds = rand(Ne2+1: Ne2+Ni_local, ki_local)
-    ie2_inds = rand(Ne_local+1:Ne2, kie)
+    ie2_inds = rand(Ne_local+1:Ne2, ke)
     ii2_inds = rand(Ne2+Ni_local+1:N, ki_local)
 
-    ieNL1_inds = rand(Ne_local+1:Ne2, kie)
-    ieNL2_inds = rand(1:Ne_local, kie)
+    ieNL1_inds = rand(Ne_local+1:Ne2, ke)
+    ieNL2_inds = rand(1:Ne_local, ke)
 
     for j in eachindex(ie1_inds)
       W[i, ie1_inds[j]] += Jie

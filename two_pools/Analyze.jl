@@ -1261,7 +1261,7 @@ function theory_rates_4x4_sf_gen(WEE_1, WEE_2, WIE_1, WIE_2, WIEL_1, WIEL_2, WEI
   RE1, RE2 = TR_4x4_sf(WEE_1, WEE_2, WIE_1, WIE_2, WIEL_1, WIEL_2, WEI_1,WEI_2, WII_1, WII_2, FE1, FI1, FE2, FI2)
 
   RI1 = ((WIE_1 .* RE1) .+ (WIEL_1 .* RE2) .+ FI1) ./ WII_1
-  RI2 = ((WIE_1 .* RE2) .+ (WIEL_1 .* RE1) .+ FI2) ./ WII_1
+  RI2 = ((WIE_2 .* RE2) .+ (WIEL_2 .* RE1) .+ FI2) ./ WII_1
 
   return RE1, RE2, RI1, RI2
 end
