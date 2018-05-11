@@ -78,13 +78,13 @@ s_inputs = zeros(16);
 compartments = [1, Ne2, Ne, Ne+Ni2]
 
 
-function weights_lookup(i, raster, modu, j_inds)
+function weights_lookup(i, raster, j_inds)
   kx = find(raster .== i)
   if length(ks) > 0
     for j = 1:4
-      wxr = find(W[compartments[j]:compartments[j] + Ne2, i + modu])
-      A = W[compartment:compartment + Ne2][wxr[1]]
-      output = A * length(wxr) * length(kx)
+      wxr = find(W[compartments[j]:compartments[j] + Ne2, i])
+      A = W[compartments[j]:compartments[j] + Ne2, i][wxr[1]]
+      output = A * tau_s * length(wxr) * length(kx)#integral over synaptic waveform * number_outputs * number of spikes *
       s_inputs[j_inds[j]] += output
     end
   end
@@ -92,22 +92,32 @@ end
 
 #
 
+#EE11, EE22, EE21, EE12,
+#IE11, IE22, IE21, IE12,
+#EI11, EI22, EI21, EI12,
+#II11, II22, II21, II12
+#compartments = [1, Ne2, Ne, Ne+Ni2]
 
 
 #this loop assumes Ne=Ni for convenience
 for i = 1:Ne2
-  weights_lookup(i, re, 0, [1, 3, ])
+  weights_lookup(i, re, [1, 3, 5, 7])
+  weights_lookup(i+Ne2, re, [2, 4, 6, 8])
+  weights_lookup(i + Ne, ri, [9, 11, 13, 15])
+  weights_lookup(i+Ne+Ne2, ri, [10, 12, 14, 16])
+end
 
+normz = Ne2 * runtime
 
+input_strings = ["EE11", "EE22", "EE21", "EE12", "IE11", "IE22", "IE21", "IE12", "EI11", "EI22", "EI21", "EI12", "II11", "II22", "II21", "II11",]
 
-i = 2000
-kx = find(re .== i);
-wx1 = length(find(W[1:Ne2, i]));
-wx2 = length(find(W[Ne2+1:Ne, i]));
-wx3 = length(find(W[Ne+1:Ne + Ne2, i]));
-wx4 = length(find(W[Ne+Ne2:N, i]));
+s_inf  = s_inputs ./ normz
 
-
-
+bar(1:16, s_inf, tick_label = input_strings)
+xticks(rotation = 45, fontsize = 24)
+yticks(fontsize = 24)
+title("Characterizing Inputs in Brent's Network", fontsize = 36)
 
 #
+s_inf[2] + s_inf[3] + s_inf[10] + s_inf[11] + fe2
+s_inf[1] + s_inf[4] + s_inf[9] + s_inf[12] + fe1
