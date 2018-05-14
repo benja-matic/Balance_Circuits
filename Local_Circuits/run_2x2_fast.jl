@@ -56,28 +56,20 @@ ri = r[im];
 
 er1 = Set(find(re .< Ne2));
 er2 = setdiff(Set(1:length(re)), er1);
+ir1 = Set(find(ri .< Ne + Ni2));
+ir2 = setdiff(Set(1:length(ri)), ir1);
+
+ME = length(re)/(Ne*rt)
 MER1 = length(er1)/(Ne2*rt);
 MER2 = length(er2)/(Ne2*rt);
+MIR1 = length(ir1)/(Ni2*rt);
+MIR2 = length(ir2)/(Ni2*rt);
 
 figure(1)
 plot(t,r,".")
 
-###################
-#IE means E to I, 12 means from 2 to 1
-#EE11, EE22, EE21, EE12,
-#IE11, IE22, IE21, IE12,
-#EI11, EI22, EI21, EI12,
-#II11, II22, II21, II12
 s_inputs = zeros(16);
-#  sum over A__/sqrt(k) * k_out * tau_s, divide by number of neurons, time
-
-#loop over neurons
-#get firing rate
-#loop over 4 compartments of matrix (local vs non-local X 2 connection types) ... (e.g. local EE, nonlocal EE, Local IE, nonlocal IE)
-#
-
 compartments = [1, Ne2, Ne, Ne+Ni2]
-
 
 function weights_lookup(i, raster, j_inds)
   kx = find(raster .== i)
@@ -94,15 +86,6 @@ function weights_lookup(i, raster, j_inds)
     end
   end
 end
-
-#
-
-#EE11, EE22, EE21, EE12,
-#IE11, IE22, IE21, IE12,
-#EI11, EI22, EI21, EI12,
-#II11, II22, II21, II12
-#compartments = [1, Ne2, Ne, Ne+Ni2]
-
 
 #this loop assumes Ne=Ni for convenience
 for i = 1:Ne2
@@ -130,115 +113,13 @@ s_inf[1] + s_inf[4] + s_inf[9] + s_inf[12] + fe1 #input to E pool 1 (suppressed)
 s_inf[6] + s_inf[7] + s_inf[14] + s_inf[15] + fi2#input to I pool 2 (dominant)
 s_inf[5] + s_inf[8] + s_inf[13] + s_inf[16] + fi1#input to I pool 1 (suppressed)
 
+(s_inf[1] + s_inf[3])/MER1 #output from pool1 excitatory neurons to other excitatory neurons
+(s_inf[2] + s_inf[4])/MER2 #same, but pool 2
+(s_inf[5] + s_inf[7])/MER1 #from E to I
+(s_inf[6] + s_inf[8])/MER2 #from E to I
+(s_inf[9] + s_inf[11])/MIR1 #I to E
+(s_inf[10] + s_inf[12])/MIR2 #I to E
+(s_inf[13] + s_inf[15])/MIR1 #I to I
+(s_inf[14] + s_inf[16])/MIR2 #I to E
 
-###checking for bugs
-#first issue is that you can have repeat indices
-#to resolve this we can compute sums over every row and column and compare to what I think we should get
-Jee = Aee/ks
-Jei = -Aei/ks
-Jie = Aie/ks
-Jii = -Aii/ks
-
-e_row_t = Jee*k + Jei*k
-i_row_t = Jie*k + Jii*k
-# e_col_t =
-
-# c_out = zeros(N);
-# c_outx = zeros(N);
-# c_in = zeros(N);
-# c_inx = zeros(N);
-#
-# for i = 1:N
-#   kx = sum(W[:,i])
-#   c_out[i] = kx
-#   kx2 = sum(W[i,:])
-#   c_outx[i] = length(find(W[:,i]))
-#   c_in[i] = kx2
-#   c_inx[i] = length(find(W[i,:]))
-# end
-# figure(3)
-# plot(c_in)
-# axhline(e_row_t, linestyle = "dashed")
-# axhline(i_row_t, linestyle = "dashed")
-#that's a good lookin' check
-
-#plot(c_out)
-#outputs are not constrained, so we expect some heterogeneity
-#Each time we decide who supplies inputs, we choose a neuron with probability k2/(Ne2=Ni2) = k/(Ne=Ni)
-#This experiment is repeated N times, thus we expect each neuron to have N*k/Ne outputs = 2k
-#plot(c_outx) #looks like the number of UNIQUE outgoing connections is a bit less than 2k...approximately correct
-#is it really 2k - (N*2k/N^2) - (N*2k/N^3) - ...? whenever you get doubled, someone else gets left out
-# #we know past N, the terms are virtually vanishing, just subtract out N^2 terms
-# p0 = 2k/N
-# p1 = 2k/N^2
-# #probability of being chosen is 2k/N for each row, so probability of not being chosen is 1 - 2k/n ~ .68
-# figure(4)
-# plot(sort(c_inx), sort(c_outx))
-# plot([1200,1600], [1200, 1600], "r")
-#this plot seems to say that there are a higher number of unique outgoing connections than incoming connections
-
-
-##try checking some sums over Ne2 sized pieces of columns
-ees1 = zeros(Ne2);
-ees2 = zeros(Ne2);
-eis1 = zeros(Ni2);
-eis2 = zeros(Ni2);
-eis3 = zeros(Ni2);#just spot check pool 2 E neurons
-eis4 = zeros(Ni2);
-ies1 = zeros(Ne2);
-ies2 = zeros(Ne2);
-iis1 = zeros(Ni2);
-iis2 = zeros(Ni2);
-
-for i = 1:Ne2
-  e1 = sum(W[1:Ne2, i])
-  e2 = sum(W[1:Ne2, i+Ne2])
-  ees1[i] = e1
-  ees2[i] = e2
-end
-
-for i = 1:Ne2
-  e1 = sum(W[1:Ne2, i+Ne])
-  e2 = sum(W[1:Ne2, i+Ne+Ni2])
-  eis1[i] = e1
-  eis2[i] = e2
-end
-
-for i = 1:Ne2
-  e1 = sum(W[Ne+1:Ne+Ni2, i])
-  e2 = sum(W[Ne+1:Ne+Ni2, i+Ni2])
-  ies1[i] = e1
-  ies2[i] = e2
-end
-
-for i = 1:Ne2
-  e1 = sum(W[Ne+1:Ne+Ni2, i+Ne])
-  e2 = sum(W[Ne+1:Ne+Ni2, i+Ne+Ni2])
-  iis1[i] = e1
-  iis2[i] = e2
-end
-
-for i = 1:Ne2
-  e1 = sum(W[Ne2+1:Ne, i+Ne])
-  e2 = sum(W[Ne2+1:Ne, i+Ne+Ni2])
-  eis3[i] = e1
-  eis4[i] = e2
-end
-
-#verified matrix is not biased, issue must be in my measures
-
-#
-
-
-#c_in should have 0 heterogeneity, should just be 2k every time
-
-# Wx = zeros(N,N);
-# e_inds = rand(1:Ne2, k2);
-# i_inds = rand(Ne+1:Ne+Ni2, k2);
-#
-# for j in eachindex(e_inds)
-#   Wx[1, e_inds[j]] += 1
-#   Wx[1, e_inds[j] + Ne2] += 1
-#   Wx[1, i_inds[j]] += 1
-#   Wx[1, i_inds[j] + Ni2] += 1
-# end
+##OK, these all checked out during a normaliation sim
