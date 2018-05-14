@@ -4,8 +4,8 @@ include("2x2_fast.jl")
 srand(4321)
 
 Aee = 12.5
-Aie = 50.
-Aei = 20.
+Aie = 20.
+Aei = 50.
 Aii = 50.
 
 N = 5000
@@ -22,7 +22,7 @@ Ni2 = round(Int64, Ni/2)
 fe1 = 3.
 fi1 = fe1 - .15
 
-fe2 = fe1 #+ .5
+fe2 = fe1 + .5
 fi2 = fe2 - .15
 
 vth = 20
