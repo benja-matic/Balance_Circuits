@@ -1,5 +1,5 @@
 include("2x2_fast.jl")
-# include("Analyze.jl")
+include("c://Users//cohenbp//Documents//Neuroscience//Balance_Circuits//two_pools//Analyze.jl")
 
 srand(4321)
 
@@ -22,7 +22,7 @@ Ni2 = round(Int64, Ni/2)
 fe1 = 3.
 fi1 = fe1 - .15
 
-fe2 = fe1 + .5
+fe2 = fe1 #+ .5
 fi2 = fe2 - .15
 
 vth = 20
@@ -59,7 +59,8 @@ er2 = setdiff(Set(1:length(re)), er1);
 ir1 = Set(find(ri .< Ne + Ni2));
 ir2 = setdiff(Set(1:length(ri)), ir1);
 
-ME = length(re)/(Ne*rt)
+ME = length(re)/(Ne*rt);
+MI = length(ri)/(Ni*rt);
 MER1 = length(er1)/(Ne2*rt);
 MER2 = length(er2)/(Ne2*rt);
 MIR1 = length(ir1)/(Ni2*rt);
@@ -75,11 +76,6 @@ function weights_lookup(i, raster, j_inds)
   kx = find(raster .== i)
   if length(ks) > 0
     for j = 1:4
-      # wxr = find(W[compartments[j]:compartments[j] + Ne2, i])
-      # A = W[compartments[j]:compartments[j] + Ne2, i][wxr[1]]
-      # output = A * tau_s * length(wxr) * length(kx)#integral over synaptic waveform * number_outputs * number of spikes *
-      ### fails to account for tupled connections
-      ### should really be sum over column compartment * tau_s * number of spikes
       ws = sum(W[compartments[j]:compartments[j] + Ne2, i])
       output = ws * tau_s * length(kx)
       s_inputs[j_inds[j]] += output
@@ -95,7 +91,7 @@ for i = 1:Ne2
   weights_lookup(i+Ne+Ne2, ri, [10, 12, 14, 16])
 end
 
-normz = Ne2 * runtime
+normz = Ne2 * runtime #note that when you pretend this is 2x2, if you sum over all 4 inputs of a given type, you will get double what you expect since you normalized by Ne2 here, not Ne
 
 input_strings = ["EE11", "EE22", "EE21", "EE12", "IE11", "IE22", "IE21", "IE12", "EI11", "EI22", "EI21", "EI12", "II11", "II22", "II21", "II12",]
 
@@ -113,13 +109,24 @@ s_inf[1] + s_inf[4] + s_inf[9] + s_inf[12] + fe1 #input to E pool 1 (suppressed)
 s_inf[6] + s_inf[7] + s_inf[14] + s_inf[15] + fi2#input to I pool 2 (dominant)
 s_inf[5] + s_inf[8] + s_inf[13] + s_inf[16] + fi1#input to I pool 1 (suppressed)
 
-(s_inf[1] + s_inf[3])/MER1 #output from pool1 excitatory neurons to other excitatory neurons
-(s_inf[2] + s_inf[4])/MER2 #same, but pool 2
-(s_inf[5] + s_inf[7])/MER1 #from E to I
-(s_inf[6] + s_inf[8])/MER2 #from E to I
-(s_inf[9] + s_inf[11])/MIR1 #I to E
-(s_inf[10] + s_inf[12])/MIR2 #I to E
-(s_inf[13] + s_inf[15])/MIR1 #I to I
-(s_inf[14] + s_inf[16])/MIR2 #I to E
+WEE1 = (s_inf[1] + s_inf[3])/MER1 #output from pool1 excitatory neurons to other excitatory neurons
+WEE2 = (s_inf[2] + s_inf[4])/MER2 #same, but pool 2
+WIE1 = (s_inf[5] + s_inf[7])/MER1 #from E to I
+WIE2 = (s_inf[6] + s_inf[8])/MER2 #from E to I
+WEI1 = (s_inf[9] + s_inf[11])/MIR1 #I to E
+WEI2 = (s_inf[10] + s_inf[12])/MIR2 #I to E
+WII1 = (s_inf[13] + s_inf[15])/MIR1 #I to I
+WII2 = (s_inf[14] + s_inf[16])/MIR2 #I to E
+
+s_2x2 = s_inputs ./ (Ne * runtime)
+
+WEE2x = sum(s_2x2[1:4])/ME
+WIE2x = sum(s_2x2[5:8])/ME
+WEI2x = sum(s_2x2[9:12])/MI
+WII2x = sum(s_2x2[13:16])/MI
 
 ##OK, these all checked out during a normaliation sim
+##and a WTA sim
+
+##now we can start predicting firing rates
+RE = theory_rates_2x2(WEE2x, WIE2x, WEI2x, WII2x, fe1, fi1)

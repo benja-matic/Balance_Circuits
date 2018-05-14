@@ -1,36 +1,3 @@
-function local_random_2x2(N, IFRAC, k, Aee, Aei, Aie, Aii)
-
-  Ni = Int64(round(N/IFRAC))
-  Ne = N - Ni
-  ks = sqrt(k)
-
-  Jee = Aee/ks
-  Jei = -Aei/ks
-  Jie = Aie/ks
-  Jii = -Aii/ks
-
-  W1 = zeros(N,N)
-  for i = 1:Ne
-    e_inds = rand(1:Ne, k)
-    i_inds = rand(Ne+1:N, k)
-    for j in eachindex(e_inds)
-      W1[i, e_inds[j]] += Jee
-      W1[i, i_inds[j]] += Jei
-    end
-  end
-
-  for i = Ne+1:N
-    e_inds = rand(1:Ne, k)
-    i_inds = rand(Ne+1:N, k)
-    for j in eachindex(e_inds)
-      W1[i, e_inds[j]] += Jie
-      W1[i, i_inds[j]] += Jii
-    end
-  end
-
-  return W1
-end
-
 function local_random_2x2_symmetric(N, IFRAC, k, Aee, Aei, Aie, Aii)
 
   Ni = Int64(round(N/IFRAC))
@@ -46,8 +13,7 @@ function local_random_2x2_symmetric(N, IFRAC, k, Aee, Aei, Aie, Aii)
   Jii = -Aii/ks
 
   W1 = zeros(N,N)
-  println(size(W1))
-  for i = 1:Ne2
+  for i = 1:Ne
     e_inds = rand(1:Ne2, k2)
     i_inds = rand(Ne + 1:Ne + Ni2, k2)
     for j in eachindex(e_inds)
@@ -55,15 +21,10 @@ function local_random_2x2_symmetric(N, IFRAC, k, Aee, Aei, Aie, Aii)
       W1[i, e_inds[j] + Ne2] += Jee
       W1[i, i_inds[j]] += Jei
       W1[i, i_inds[j] + Ni2] += Jei
-
-      W1[i+Ne2, e_inds[j]] += Jee
-      W1[i+Ne2, e_inds[j] + Ne2] += Jee
-      W1[i+Ne2, i_inds[j]] += Jei
-      W1[i+Ne2, i_inds[j] + Ni2] += Jei
     end
   end
 
-  for i = Ne+1:Ne+Ni2
+  for i = Ne+1:N
     e_inds = rand(1:Ne2, k2)
     i_inds = rand(Ne + 1:Ne + Ni2, k2)
     for j in eachindex(e_inds)
@@ -71,11 +32,6 @@ function local_random_2x2_symmetric(N, IFRAC, k, Aee, Aei, Aie, Aii)
       W1[i, e_inds[j] + Ne2] += Jie
       W1[i, i_inds[j]] += Jii
       W1[i, i_inds[j] + Ni2] += Jii
-
-      W1[i+Ni2, e_inds[j]] += Jie
-      W1[i+Ni2, e_inds[j] + Ne2] += Jie
-      W1[i+Ni2, i_inds[j]] += Jii
-      W1[i+Ni2, i_inds[j] + Ni2] += Jii
     end
   end
 
