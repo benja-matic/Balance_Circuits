@@ -1392,3 +1392,9 @@ function weights_lookup(i, raster, j_inds)
     end
   end
 end
+
+function solve_for_f(wee, wei, wie, wii, re, ri)
+  fe = (wei .* ri) .- (wee .* re)
+  fi = (wii .* ri) .- (wie .* re)
+  return fe, fi
+end
