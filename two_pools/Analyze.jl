@@ -1381,3 +1381,14 @@ function single_neuron_noise(tau, vth, S, runtime, h)
   end
   return spikes
 end
+
+function weights_lookup(i, raster, j_inds)
+  kx = find(raster .== i)
+  if length(ks) > 0
+    for j = 1:4
+      ws = sum(W[compartments[j]:compartments[j] + Ne2, i])
+      output = ws * tau_s * length(kx)
+      s_inputs[j_inds[j]] += output
+    end
+  end
+end
