@@ -174,8 +174,8 @@ RE2, RI2 = theory_rates_2x2(abs(WEE2), abs(WIE2), abs(WEI2), abs(WII2), fe2 - EL
 # end
 # legend()
 
-TE = .3
-TI = .6
+TE = -.4
+TI = -.2
 RE1, RI1 = theory_rates_2x2(abs(WEE1), abs(WIE1), abs(WEI1), abs(WII1), fe1 + EL12 - TE, fi1 + IL12 - TI)
 RE2, RI2 = theory_rates_2x2(abs(WEE2), abs(WIE2), abs(WEI2), abs(WII2), fe2 + EL21 - TE, fi2 + IL21 - TI)
 
