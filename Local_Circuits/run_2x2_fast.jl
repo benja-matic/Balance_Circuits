@@ -16,26 +16,26 @@ include("c://Users//cohenbp//Documents//Neuroscience//Balance_Circuits//two_pool
 srand(4321)
 
 Aee = 12.5
-Aie = 20#i
-Aei = 50.
-Aii = 50.
+Aie = 30#i
+Aei = 20.
+Aii = 45.
 
-N = 32000#i#5000
+N = 2000#i#5000
 IFRAC = 2.
 Ni = Int64(round(N/IFRAC))
 Ne = N - Ni
 
-k = 800
+k = 200
 ks = sqrt(k)
 k2 = round(Int64, k/2)
 Ne2 = round(Int64, Ne/2)
 Ni2 = round(Int64, Ni/2)
 
 fe1 = 3
-fi1 = fe1 - .15
+fi1 = 0#fe1 - .15
 
-fe2 = fe1 + .5
-fi2 = fe2 - .15
+fe2 = fe1 #+ .5
+fi2 = 0#fe2 - .15
 
 vth = 20
 tau_m = 20.
@@ -57,14 +57,12 @@ CSR = sparse_rep(W, N);
 
 @time t, r = euler_lif_2x2_CSR(h, runtime, N, IFRAC, W, CSR, fe1, fi1, fe2, fi2, vth, tau_m, tau_s)
 
-an = Set(1:length(r));
-em = find(r .<= Ne);
-im = collect(setdiff(an, Set(em)));
-te = t[em];
-re = r[em];
-
-ti = t[im];
-ri = r[im];
+e_m = find(r .<= Ne);
+i_m = find(r .> Ne);
+te = t[e_m];
+re = r[e_m];
+ti = t[i_m];
+ri = r[i_m];
 
 er1 = Set(find(re .< Ne2));
 er2 = setdiff(Set(1:length(re)), er1);
@@ -80,6 +78,26 @@ MIR2 = length(ir2)/(Ni2*rt);
 
 # figure(1)
 # plot(t,r,".")
+
+###Bare Bones Spiking Statistics
+TNE, BNE = Neurons_tb_ns(re, Ne2, 10, 100) #neurons in either pool who fired at least 10 spkes in simulation
+TNI, BNI = Neurons_tb_ns(ri, Ne + Ni2, 10, 100) #neurons in either pool who fired at least 10 spkes in simulation
+
+#correlations
+cwTe = rand_pair_cor(cbinsize, te, re, TNE, 1000)
+cwBe = rand_pair_cor(cbinsize, te, re, BNE, 1000)
+cwBi = rand_pair_cor(cbinsize, ti, ri, TNI, 1000)
+cwTi = rand_pair_cor(cbinsize, ti, ri, BNI, 1000)
+
+CV_ETOP = CV_ISI_ALLTIME(TNE, te, re);
+CV_EBOT = CV_ISI_ALLTIME(BNE, te, re);
+CV_ITOP = CV_ISI_ALLTIME(TNI, ti, ri);
+CV_IBOT = CV_ISI_ALLTIME(BNI, ti, ri);
+
+E_R_top = [length(find(re .== i))/rt for i=Ne2+1:Ne];
+E_R_bot = [length(find(re .== i))/rt for i=1:Ne2];
+I_R_top = [length(find(ri .== i))/rt for i=Ne+Ni2+1:N];
+I_R_bot = [length(find(ri .== i))/rt for i=Ne+1:Ne+Ni2];
 
 s_inputs = zeros(16);
 compartments = [1, Ne2, Ne, Ne+Ni2]

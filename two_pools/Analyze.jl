@@ -767,7 +767,7 @@ function CV_ISI_ALLTIME(Neurons, t, r)
   end
   CVS = []
   for i in eachindex(Neurons)
-    INT = t[find(r.==Neurons[i])]
+    INT = sort(t[find(r.==Neurons[i])])
     isi = diff(INT)
     c = cv(isi)
     if isnan(c) == false
